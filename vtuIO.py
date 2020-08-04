@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from vtk import *
 from vtk.util.numpy_support import vtk_to_numpy
 from vtk.util.numpy_support import numpy_to_vtk
@@ -13,6 +14,20 @@ class VTUIO(object):
         self.ts_files['ts'] = []
         self.ts_files['filename'] = []
         self.points = np.array([])
+
+    def _getNeighbors(self, points_interpol, df):
+        neighbors = {}
+        for i, key in enumerate(points_interpol):
+            df["r_"+str(i)]=(df[0]-points_interpol[key][0])*(df[0]-points_interpol[key][0])+(df[1]-points_interpol[key][1])*(df[1]-points_interpol[key][1])+(df[2]-points_interpol[key][2])*(df[key]-points_interpol[key][2])
+            neighbors[i] = df.sort_values(by=["r_"+str(i)]).head(10).index
+        return neighbors
+    def _getData(self, neighbors, pts, filename, fieldname):
+        field = self.readVTUfile(filename,fieldname)
+        resp = {}
+        for i, key in enumerate(points_interpol):
+            grid_x, grid_y, grid_z = np.mgrid[points_interpol[key][0]:(points_interpol[key][0]+0.1):1, points_interpol[key][1]:(points_interpol[key][1]+0.1):1, points_interpol[key][2]:(points_interpol[key][2]+0.1):]
+            resp[key] = griddata(self.points[neighbors[i]], field[neighbors[i]], (grid_x, grid_y, grid_z), method='linear')[0][0][0]
+        return resp
 
     def readPVD(self,filename, prefix='./'):
         self.filename = prefix + filename
@@ -38,16 +53,25 @@ class VTUIO(object):
         reader.SetFileName(filename)
         reader.Update()
         output = reader.GetOutput()
-        self.points = vtk_to_numpy(output.GetPoints().GetData())
+        if not len(self.points) > 0
+            self.points = vtk_to_numpy(output.GetPoints().GetData())
         field = vtk_to_numpy(output.GetPointData().GetArray(fieldname))
         return field
     
     def getFieldnames(self):
         pass
 
-    def readTimeSeries(self,pts = {'pt0': (0.0,0.0,0.0)}):
-
-
+    def readTimeSeries(self,pts = {'pt0': (0.0,0.0,0.0)},fieldname):
+        df = pd.DataFrame(self.points)
+        nb = self._getNeighbors(pts, df)
+        resp_t = {}
+        for pt in pts:
+            resp_t[pt] = []
+        for filename in self.ts_files['filename']
+            data = _getData(nb, pts, filename, fieldname)
+        for pt in pts:
+            resp_t[pt].append(data[pt])
+        return resp_t
 
     def readVTU(self,filename,observation_points):
         reader = vtkXMLUnstructuredGridReader()
