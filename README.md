@@ -1,13 +1,10 @@
 # Easy VTU interface 
-
+## julia usage example
 
 ```julia
 ENV["PYTHON"] = "/usr/bin/python3"
 Pkg.build("PyCall")
 ```
-
-    [32m[1m   Building[22m[39m Conda ─→ `~/.julia/packages/Conda/3rPhK/deps/build.log`
-    [32m[1m   Building[22m[39m PyCall → `~/.julia/packages/PyCall/zqDXB/deps/build.log`
 
 
 
@@ -20,15 +17,6 @@ using PyCall
 @pyimport vtuIO
 ```
 
-
-```julia
-
-```
-
-
-```julia
-
-```
 
 
 ```julia
