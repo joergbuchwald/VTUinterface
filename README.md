@@ -1,23 +1,24 @@
 # Easy VTU interface 
 ## julia usage example
 
+Set the path for the correct python version for which the VTK wrapper/VTUIO is installed:
 ```julia
 ENV["PYTHON"] = "/usr/bin/python3"
 Pkg.build("PyCall")
 ```
 
-
+Load PyCall:
 
 ```julia
 using PyCall
 ```
-
+Load vtuIO:
 
 ```julia
 @pyimport vtuIO
 ```
 
-
+Read in the VTU file:
 
 ```julia
 data = vtuIO.VTUIO("THM-aniso_U3ts_14_t_1400000.000000.vtu")
@@ -182,7 +183,7 @@ pvdfile = vtuIO.PVDIO("/home/joerg/FE_test/model_test/THM/", "THM-aniso.pvd")
     PyObject <vtuIO.PVDIO object at 0x7feb1bb8e670>
 
 
-
+Define a dictionary conating all points for which we want to extract time series data:
 
 ```julia
 pts =Dict("pt0" =>(0.8,0.8,0.8))
