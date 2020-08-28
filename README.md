@@ -93,9 +93,9 @@ p=data.getField("pressure")
      -2682.609737272521
 
 
-##Alter the VTU file:
+## Alter the VTU file:
 
-###define new field
+### define new field
 
 ```julia
 pMPa = p./1e6
@@ -132,14 +132,14 @@ pMPa = p./1e6
      -0.0022607309630541194
      -0.002682609737272521
 
-###write new field/file
+### write new field/file
 
 
 ```julia
 data.writeField(pMPa,"pressureMPa", "out.vtu")
 ```
 
-###read in new file
+### read in new file
 
 ```julia
 data2 = vtuIO.VTUIO("out.vtu")
@@ -150,7 +150,7 @@ data2 = vtuIO.VTUIO("out.vtu")
 
     PyObject <vtuIO.VTUIO object at 0x7feb34d9e0d0>
 
-###show all field names
+### show all field names
 
 
 ```julia
