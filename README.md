@@ -7,18 +7,18 @@ ENV["PYTHON"] = "/usr/bin/python3"
 Pkg.build("PyCall")
 ```
 
-Load PyCall:
+### Load PyCall:
 
 ```julia
 using PyCall
 ```
-Load vtuIO:
+### Load vtuIO:
 
 ```julia
 @pyimport vtuIO
 ```
 
-##Read in the VTU file:
+### Read in the VTU file:
 
 ```julia
 data = vtuIO.VTUIO("THM-aniso_U3ts_14_t_1400000.000000.vtu")
