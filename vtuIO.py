@@ -79,7 +79,7 @@ class PVDIO(object):
         root = tree.getroot()
         for collection in root.getchildren():
             for dataset in collection.getchildren():
-                self.ts_files['ts'].append(dataset.attrib['timestep'])
+                self.ts_files['ts'].append(float(dataset.attrib['timestep']))
                 self.ts_files['filename'].append(dataset.attrib['file'])
 
     def readTimeSeries(self,fieldname, pts = {'pt0': (0.0,0.0,0.0)}):
