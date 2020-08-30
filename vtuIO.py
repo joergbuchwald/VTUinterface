@@ -8,7 +8,7 @@ from scipy.interpolate import griddata
 
 
 class VTUIO(object):
-    def __init__(self, filename):
+    def __init__(self, filename, dim=3):
         self.filename = filename
         self.reader = vtkXMLUnstructuredGridReader()
         self.reader.SetFileName(self.filename)
@@ -16,20 +16,30 @@ class VTUIO(object):
         self.output = self.reader.GetOutput()
         self.pdata = self.output.GetPointData()
         self.points = vtk_to_numpy(self.output.GetPoints().GetData())
+        self.dim = dim
+        if self.dim == 2:
+            self.points = np.delete(self.points,2,1)
   
     def getNeighbors(self, points_interpol):
         df = pd.DataFrame(self.points)
         neighbors = {}
         for i, key in enumerate(points_interpol):
-            df["r_"+str(i)]=(df[0]-points_interpol[key][0])*(df[0]-points_interpol[key][0])+(df[1]-points_interpol[key][1])*(df[1]-points_interpol[key][1])+(df[2]-points_interpol[key][2])*(df[2]-points_interpol[key][2])
+            if self.dim == 2:
+                df["r_"+str(i)]=(df[0]-points_interpol[key][0])*(df[0]-points_interpol[key][0])+(df[1]-points_interpol[key][1])*(df[1]-points_interpol[key][1])
+            else:
+                df["r_"+str(i)]=(df[0]-points_interpol[key][0])*(df[0]-points_interpol[key][0])+(df[1]-points_interpol[key][1])*(df[1]-points_interpol[key][1])+(df[2]-points_interpol[key][2])*(df[2]-points_interpol[key][2])
             neighbors[i] = df.sort_values(by=["r_"+str(i)]).head(20).index
         return neighbors
     def getData(self, neighbors, points_interpol, fieldname):
         field = self.getField(fieldname)
         resp = {}
         for i, key in enumerate(points_interpol):
-            grid_x, grid_y, grid_z = np.mgrid[points_interpol[key][0]:(points_interpol[key][0]+0.1):1, points_interpol[key][1]:(points_interpol[key][1]+0.1):1, points_interpol[key][2]:(points_interpol[key][2]+0.1):]
-            resp[key] = griddata(self.points[neighbors[i]], field[neighbors[i]], (grid_x, grid_y, grid_z), method='linear')[0][0][0]
+            if self.dim == 2:
+                grid_x, grid_y = np.mgrid[points_interpol[key][0]:(points_interpol[key][0]+0.1):1, points_interpol[key][1]:(points_interpol[key][1]+0.1):1]
+                resp[key] = griddata(self.points[neighbors[i]], field[neighbors[i]], (grid_x, grid_y), method='linear')[0][0]
+            else:
+                grid_x, grid_y, grid_z = np.mgrid[points_interpol[key][0]:(points_interpol[key][0]+0.1):1, points_interpol[key][1]:(points_interpol[key][1]+0.1):1, points_interpol[key][2]:(points_interpol[key][2]+0.1):]
+                resp[key] = griddata(self.points[neighbors[i]], field[neighbors[i]], (grid_x, grid_y, grid_z), method='linear')[0][0][0]
         return resp
   
     def getField(self, fieldname):
@@ -54,13 +64,14 @@ class VTUIO(object):
 
 
 class PVDIO(object):
-    def __init__(self, folder, filename):
+    def __init__(self, folder, filename, dim=3):
         self.folder = folder
         self.filename = ""
         self.ts_files = {}
         self.ts_files['ts'] = []
         self.ts_files['filename'] = []
         self.readPVD(folder + filename)
+        self.dim = dim
 
     def readPVD(self,filename):
         self.filename = filename
@@ -76,7 +87,7 @@ class PVDIO(object):
         for pt in pts:
             resp_t[pt] = []
         for i, filename in enumerate(self.ts_files['filename']):
-            vtu = VTUIO(self.folder+filename)
+            vtu = VTUIO(self.folder+filename, dim=self.dim)
             if i == 0:
                 nb = vtu.getNeighbors(pts)
             data = vtu.getData(nb, pts, fieldname)
@@ -88,7 +99,7 @@ class PVDIO(object):
         for i in self.ts_files['ts']:
             if timestep == i:
                 filename = self.ts_files['filename'][i]
-        vtu = VTUIO(filename)
+        vtu = VTUIO(filename, dim=self.dim)
         field = vtu.getField(fieldname)
         return field
 

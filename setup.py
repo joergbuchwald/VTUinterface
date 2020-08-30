@@ -4,7 +4,7 @@
 from setuptools import setup, find_packages
 
 setup(name="VTUinterface",
-      version=0.01,
+      version=0.02,
       maintainer="Jörg Buchwald",
       maintainer_email="joerg_buchwald@ufz.de",
       author="Jörg Buchwald",
@@ -13,5 +13,5 @@ setup(name="VTUinterface",
       license="MIT -  see LICENSE.txt",
       platforms=["Windows", "Linux", "Solaris", "Mac OS-X", "Unix"],
       include_package_data=True,
-      install_requires=["lxml"],
+      install_requires=["lxml", "vtk"],
       py_modules=["vtuIO"])
