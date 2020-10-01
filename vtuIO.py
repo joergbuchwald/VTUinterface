@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import pandas as pd
 from vtk import *
@@ -70,7 +71,7 @@ class PVDIO(object):
         self.ts_files = {}
         self.ts_files['ts'] = []
         self.ts_files['filename'] = []
-        self.readPVD(folder + filename)
+        self.readPVD(os.path.join(folder,filename))
         self.dim = dim
 
     def readPVD(self,filename):
@@ -87,7 +88,7 @@ class PVDIO(object):
         for pt in pts:
             resp_t[pt] = []
         for i, filename in enumerate(self.ts_files['filename']):
-            vtu = VTUIO(self.folder+filename, dim=self.dim)
+            vtu = VTUIO(os.path.join(self.folder,filename), dim=self.dim)
             if i == 0:
                 nb = vtu.getNeighbors(pts)
             data = vtu.getData(nb, pts, fieldname)
