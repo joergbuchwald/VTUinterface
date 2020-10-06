@@ -39,7 +39,7 @@ selected_points={'pt0': (0.25, 0.5, 0.0), 'pt1': (0.75, 0.5, 0.0)}
 pressure_interpolation=pvdfile.readTimeSeries('pressure', selected_points)
 
 # read pressure at pt0 from interpolations (dictionary)
-pressure_pt0=pressure_interpolation['pt0']    
+pressure_pt0=pressure_interpolation['pt0']
 
 # plot some result
 plt.plot(time, pressure_pt0)

@@ -86,14 +86,28 @@ class PVDIO(object):
     def readTimeSeries(self,fieldname, pts = {'pt0': (0.0,0.0,0.0)}):
         resp_t = {}
         for pt in pts:
-            resp_t[pt] = []
+            if type(fieldname) is str:
+                resp_t[pt] = []
+            elif type(fieldname) is list:
+                resp_t[pt] = {}
+                for field in fieldname:
+                    resp_t[pt][field] = []
         for i, filename in enumerate(self.ts_files['filename']):
             vtu = VTUIO(os.path.join(self.folder,filename), dim=self.dim)
             if i == 0:
                 nb = vtu.getNeighbors(pts)
-            data = vtu.getData(nb, pts, fieldname)
-            for pt in pts:
-                resp_t[pt].append(data[pt])
+            if type(fieldname) is str:
+                data = vtu.getData(nb, pts, fieldname)
+                for pt in pts:
+                    resp_t[pt].append(data[pt])
+            elif type(fieldname) is list:
+                data = {}
+                for field in fieldname:
+                    data[field] = vtu.getData(nb, pts, field)
+                for pt in pts:
+                    for field in fieldname:
+                        print(data)
+                        resp_t[pt][field].append(data[field][pt])
         return resp_t
     
     def readTimeStep(self, timestep, fieldname):
