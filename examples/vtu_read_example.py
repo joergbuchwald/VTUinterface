@@ -23,7 +23,7 @@ import vtuIO	# to read and process (point interpolation) vtu- and pvd-files
 
 
 # read file
-data=vtuIO.VTUIO("square_1e2_pcs_0_ts_1_t_1.000000.vtu")
+data=vtuIO.VTUIO("square_1e2_pcs_0_ts_1_t_1.000000.vtu", dim=2)
 
 # see what is inside the file, which fields and points
 fields=data.getFieldnames()
@@ -38,3 +38,6 @@ pressure_field=data.getField("pressure")
 print("pressure at points")
 print(pressure_field)
 
+
+point_data = data.getPointData("pressure", pts={'pt0':(0.5,0.5,0.4)})
+print(point_data)
