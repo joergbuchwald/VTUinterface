@@ -100,6 +100,7 @@ class PVDIO(object):
         self.dim = dim
 
     def readPVD(self,filename):
+        print(filename)
         self.filename = filename
         tree = ET.parse(self.filename)
         root = tree.getroot()
@@ -142,7 +143,22 @@ class PVDIO(object):
         field = vtu.getField(fieldname)
         return field
 
-
-
-
+    def clearPVDrelpath(self):
+        xpath="./Collection/DataSet"
+        tree = ET.parse(self.filename)
+        root = tree.getroot()
+        find_xpath = root.findall(xpath)
+        for tag in find_xpath:
+            filename = tag.get("file")
+            filename_new = filename.split("/")[-1]
+            tag.set("file", filename_new)
+        tree.write(self.filename,
+                            encoding="ISO-8859-1",
+                            xml_declaration=True,
+                            pretty_print=True)
+        #update file list:
+        newlist = []
+        for entry in  self.ts_files['filename']:
+            newlist.append(entry.split("/")[-1])
+        self.ts_files['filename'] = newlist
 
