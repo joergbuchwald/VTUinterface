@@ -76,6 +76,18 @@ class VTUIO(object):
                 for field in fieldname:
                     resp[pt][field]=data[field][pt]
         return resp
+    
+    def getPointSetData(self, fieldname, pointsetarray =[(0,0,0)]):
+        pts = {}
+        # convert into point dictionary
+        for i, entry in enumerate(pointsetarray):
+            pts['pt'+str(i)] = entry
+        resp = self.getPointData(fieldname, pts=pts)
+        resp_list = []
+        # convert point dictionary into list
+        for i, entry in enumerate(pointsetarray):
+            resp_list.append(resp['pt'+str(i)])
+        return resp_list
 
 
     def writeField(self, field, fieldname, ofilename):
