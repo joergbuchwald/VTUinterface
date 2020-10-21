@@ -1,4 +1,9 @@
 # Easy VTU interface 
+
+## python usage examples
+
+see examples directory
+
 ## julia usage example
 
 Set the path for the correct python version for which the VTK wrapper/VTUIO is installed:
