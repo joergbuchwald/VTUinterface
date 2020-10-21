@@ -87,7 +87,8 @@ class VTUIO(object):
         # convert point dictionary into list
         for i, entry in enumerate(pointsetarray):
             resp_list.append(resp['pt'+str(i)])
-        return resp_list
+        resp_array = np.array(resp_list)
+        return resp_array
 
 
     def writeField(self, field, fieldname, ofilename):
@@ -176,6 +177,39 @@ class PVDIO(object):
                 vtu2 = VTUIO(filename2, dim=self.dim)
                 field1 = vtu1.getField(fieldname)
                 field2 = vtu2.getField(fieldname)
+                fieldslope = (field2-field1)/(timestep2-timestep1)
+                field = field1 + fieldslope * (timestep-timestep1)
+        return field
+
+    def readPointSetData(self, timestep, fieldname, pointsetarray =[(0,0,0)]):
+        filename = None
+        for i, ts in enumerate(self.ts_files['ts']):
+            if timestep == ts:
+                filename = self.ts_files['filename'][i]
+        if not filename is None:
+            vtu = VTUIO(filename, dim=self.dim)
+            field = vtu.getPointSetData(fieldname, pointsetarray)
+        else:
+            filename1 = None
+            filename2 = None
+            timestep1 = 0.0
+            timestep2 = 0.0
+            for i, ts in enumerate(self.ts_files['ts']):
+                try:
+                    if (timestep > ts) and (timestep < self.ts_files['ts'][i+1]):
+                        timestep1 = ts
+                        timestep2 = self.ts_files['ts'][i+1]
+                        filename1 = self.ts_files['filename'][i]
+                        filename2 = self.ts_files['filename'][i+1]
+                except IndexError:
+                    print("time step is out of range")
+            if (filename1 is None) or (filename2 is None):
+                print("time step is out of range")
+            else:
+                vtu1 = VTUIO(filename1, dim=self.dim)
+                vtu2 = VTUIO(filename2, dim=self.dim)
+                field1 = vtu1.getPointSetData(fieldname, pointsetarray)
+                field2 = vtu2.getPointSetData(fieldname, pointsetarray)
                 fieldslope = (field2-field1)/(timestep2-timestep1)
                 field = field1 + fieldslope * (timestep-timestep1)
         return field
