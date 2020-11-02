@@ -13,5 +13,5 @@ setup(name="VTUinterface",
       license="MIT -  see LICENSE.txt",
       platforms=["Windows", "Linux", "Solaris", "Mac OS-X", "Unix"],
       include_package_data=True,
-      install_requires=["lxml", "vtk"],
+      install_requires=["lxml", "vtk", "pandas"],
       py_modules=["vtuIO"])
