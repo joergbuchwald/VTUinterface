@@ -225,7 +225,7 @@ using Plots
 
 
 ```julia
-plot(pvdfile.ts_files["ts"],press_pt0["pt0"])
+plot(pvdfile.timesteps,press_pt0["pt0"])
 ```
 
 

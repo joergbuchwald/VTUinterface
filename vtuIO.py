@@ -106,9 +106,8 @@ class PVDIO(object):
     def __init__(self, folder, filename, dim=3):
         self.folder = folder
         self.filename = ""
-        self.ts_files = {}
-        self.ts_files['ts'] = []
-        self.ts_files['filename'] = []
+        self.timesteps = []
+        self.vtufilenames = []
         self.readPVD(os.path.join(folder,filename))
         self.dim = dim
 
@@ -119,8 +118,8 @@ class PVDIO(object):
         root = tree.getroot()
         for collection in root.getchildren():
             for dataset in collection.getchildren():
-                self.ts_files['ts'].append(float(dataset.attrib['timestep']))
-                self.ts_files['filename'].append(dataset.attrib['file'])
+                self.timesteps.append(float(dataset.attrib['timestep']))
+                self.vtufilenames.append(dataset.attrib['file'])
 
     def readTimeSeries(self,fieldname, pts = {'pt0': (0.0,0.0,0.0)}):
         resp_t = {}
@@ -131,7 +130,7 @@ class PVDIO(object):
                 resp_t[pt] = {}
                 for field in fieldname:
                     resp_t[pt][field] = []
-        for i, filename in enumerate(self.ts_files['filename']):
+        for i, filename in enumerate(self.vtufilenames):
             vtu = VTUIO(os.path.join(self.folder,filename), dim=self.dim)
             if i == 0:
                 nb = vtu.getNeighbors(pts)
@@ -150,9 +149,9 @@ class PVDIO(object):
 
     def readTimeStep(self, timestep, fieldname):
         filename = None
-        for i, ts in enumerate(self.ts_files['ts']):
+        for i, ts in enumerate(self.timesteps):
             if timestep == ts:
-                filename = self.ts_files['filename'][i]
+                filename = self.vtufilenames[i]
         if not filename is None:
             vtu = VTUIO(filename, dim=self.dim)
             field = vtu.getField(fieldname)
@@ -161,13 +160,13 @@ class PVDIO(object):
             filename2 = None
             timestep1 = 0.0
             timestep2 = 0.0
-            for i, ts in enumerate(self.ts_files['ts']):
+            for i, ts in enumerate(self.timesteps):
                 try:
-                    if (timestep > ts) and (timestep < self.ts_files['ts'][i+1]):
+                    if (timestep > ts) and (timestep < self.timesteps[i+1]):
                         timestep1 = ts
-                        timestep2 = self.ts_files['ts'][i+1]
-                        filename1 = self.ts_files['filename'][i]
-                        filename2 = self.ts_files['filename'][i+1]
+                        timestep2 = self.timesteps[i+1]
+                        filename1 = self.vtufilenames[i]
+                        filename2 = self.vtufilenames[i+1]
                 except IndexError:
                     print("time step is out of range")
             if (filename1 is None) or (filename2 is None):
@@ -183,9 +182,9 @@ class PVDIO(object):
 
     def readPointSetData(self, timestep, fieldname, pointsetarray =[(0,0,0)]):
         filename = None
-        for i, ts in enumerate(self.ts_files['ts']):
+        for i, ts in enumerate(self.timesteps):
             if timestep == ts:
-                filename = self.ts_files['filename'][i]
+                filename = self.vtufilenames[i]
         if not filename is None:
             vtu = VTUIO(filename, dim=self.dim)
             field = vtu.getPointSetData(fieldname, pointsetarray)
@@ -194,13 +193,13 @@ class PVDIO(object):
             filename2 = None
             timestep1 = 0.0
             timestep2 = 0.0
-            for i, ts in enumerate(self.ts_files['ts']):
+            for i, ts in enumerate(self.timesteps):
                 try:
-                    if (timestep > ts) and (timestep < self.ts_files['ts'][i+1]):
+                    if (timestep > ts) and (timestep < self.timesteps[i+1]):
                         timestep1 = ts
-                        timestep2 = self.ts_files['ts'][i+1]
-                        filename1 = self.ts_files['filename'][i]
-                        filename2 = self.ts_files['filename'][i+1]
+                        timestep2 = self.timesteps[i+1]
+                        filename1 = self.vtufilenames[i]
+                        filename2 = self.vtufilenames[i+1]
                 except IndexError:
                     print("time step is out of range")
             if (filename1 is None) or (filename2 is None):
@@ -229,7 +228,7 @@ class PVDIO(object):
                             pretty_print=True)
         #update file list:
         newlist = []
-        for entry in  self.ts_files['filename']:
+        for entry in  self.vtufilenames:
             newlist.append(entry.split("/")[-1])
-        self.ts_files['filename'] = newlist
+        self.vtufilenames = newlist
 

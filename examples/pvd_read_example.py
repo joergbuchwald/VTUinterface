@@ -29,8 +29,8 @@ import vtuIO	# to read and process (point interpolation) vtu- and pvd-files
 # Currently PVDIO assumes 2D data in 3D at x,y and ignores z.
 pvdfile=vtuIO.PVDIO(".", "square_1e2_pcs_0.pvd", dim=2)
 
-# get time vector from pvd-data (dictionary)
-time=pvdfile.ts_files['ts']   
+# get time vector from pvd-data (list)
+time=pvdfile.timesteps
 
 # define points for interpolation (dictionary)
 selected_points={'pt0': (0.25, 0.5, 0.0), 'pt1': (0.75, 0.5, 0.0)}
