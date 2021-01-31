@@ -4,7 +4,7 @@
 from setuptools import setup, find_packages
 
 setup(name="VTUinterface",
-      version=0.61,
+      version=0.62,
       maintainer="Jörg Buchwald",
       maintainer_email="joerg_buchwald@ufz.de",
       author="Jörg Buchwald",

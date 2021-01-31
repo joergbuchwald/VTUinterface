@@ -145,7 +145,15 @@ class PVDIO(object):
                 for pt in pts:
                     for field in fieldname:
                         resp_t[pt][field].append(data[field][pt])
-        return resp_t
+        resp_t_array = {}
+        for pt in resp_t:
+            if type(fieldname) is str:
+                resp_t_array[pt] = np.array(resp_t[pt])
+            elif type(fieldname) is list:
+                resp_t_array[pt] = {}
+                for field in resp_t[pt]:
+                    resp_t_array[pt][field] = np.array(resp_t[pt][field])
+        return resp_t_array
 
     def readTimeStep(self, timestep, fieldname):
         filename = None
