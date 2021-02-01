@@ -106,7 +106,7 @@ class PVDIO(object):
     def __init__(self, folder, filename, dim=3):
         self.folder = folder
         self.filename = ""
-        self.timesteps = []
+        self.timesteps = np.array([])
         self.vtufilenames = []
         self.readPVD(os.path.join(folder,filename))
         self.dim = dim
@@ -118,7 +118,7 @@ class PVDIO(object):
         root = tree.getroot()
         for collection in root.getchildren():
             for dataset in collection.getchildren():
-                self.timesteps.append(float(dataset.attrib['timestep']))
+                self.timesteps = np.append(self.timesteps, [float(dataset.attrib['timestep'])])
                 self.vtufilenames.append(dataset.attrib['file'])
 
     def readTimeSeries(self,fieldname, pts = {'pt0': (0.0,0.0,0.0)}):
