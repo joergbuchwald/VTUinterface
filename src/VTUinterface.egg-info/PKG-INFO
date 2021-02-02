@@ -1,0 +1,23 @@
+Metadata-Version: 1.2
+Name: VTUinterface
+Version: 0.62
+Summary: UNKNOWN
+Home-page: https://github.com/joergbuchwald/VTUinterface
+Author: Jörg Buchwald
+Author-email: joerg.buchwald@ufz.de
+Maintainer: Jörg Buchwald
+Maintainer-email: joerg_buchwald@ufz.de
+License: MIT -  see LICENSE.txt
+Description: UNKNOWN
+Platform: Windows
+Platform: Linux
+Platform: Solaris
+Platform: Mac OS-X
+Platform: Unix
+Classifier: Intended Audience :: Science/Research
+Classifier: Topic :: Scientific/Engineering :: Visualization
+Classifier: Topic :: Scientific/Engineering :: Physics
+Classifier: Topic :: Scientific/Engineering :: Mathematics
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.8

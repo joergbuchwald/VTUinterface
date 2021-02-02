@@ -1,0 +1,8 @@
+README.md
+setup.py
+src/vtuIO.py
+src/VTUinterface.egg-info/PKG-INFO
+src/VTUinterface.egg-info/SOURCES.txt
+src/VTUinterface.egg-info/dependency_links.txt
+src/VTUinterface.egg-info/requires.txt
+src/VTUinterface.egg-info/top_level.txt
