@@ -1,4 +1,0 @@
-lxml
-vtk
-pandas
-scipy

@@ -90,8 +90,49 @@ class VTUIO(object):
         resp_array = np.array(resp_list)
         return resp_array
 
+    """
+    " function should carry 3 arguments for x,y and z
+    """
+    def func2Field(self, function, fieldname, ofilename):
+        if callable(function) is False:
+            print("function is not a function")
+            raise TypeError
+        fieldarray = np.zeros(len(self.points))
+        for i,_ in enumerate(fieldarray):
+            fieldarray[i] = function(self.points[i,0],self.points[i,1],self.points[i,2])
+        field_vtk = numpy_to_vtk(fieldarray)
+        r = self.pdata.AddArray(field_vtk)
+        self.pdata.GetArray(r).SetName(fieldname)
+        writer = vtkXMLUnstructuredGridWriter()
+        writer.SetFileName(ofilename)
+        writer.SetInputData(self.output)
+        writer.Write()
 
-    def writeField(self, field, fieldname, ofilename):
+    """
+    " multidimensional version of func2Field
+    """
+    def func2mdimField(self, functionarray, fieldname, ofilename):
+        mdim = len(functionarray)
+        for function in functionarray:
+            if callable(function) is False:
+                print("functionarray is not containing functions only.")
+                raise TypeError
+        fieldarray = np.zeros((len(self.points), mdim))
+        for i,_ in enumerate(fieldarray):
+            for j, func in enumerate(functionarray):
+                fieldarray[i,j] = func(
+                        self.points[i,0],
+                        self.points[i,1],
+                        self.points[i,2])
+        field_vtk = numpy_to_vtk(fieldarray)
+        r = self.pdata.AddArray(field_vtk)
+        self.pdata.GetArray(r).SetName(fieldname)
+        writer = vtkXMLUnstructuredGridWriter()
+        writer.SetFileName(ofilename)
+        writer.SetInputData(self.output)
+        writer.Write()
+
+def writeField(self, field, fieldname, ofilename):
         field_vtk = numpy_to_vtk(field)
         r = self.pdata.AddArray(field_vtk)
         self.pdata.GetArray(r).SetName(fieldname)
