@@ -99,7 +99,10 @@ class VTUIO(object):
             raise TypeError
         fieldarray = np.zeros(len(self.points))
         for i,_ in enumerate(fieldarray):
-            fieldarray[i] = function(self.points[i,0],self.points[i,1],self.points[i,2])
+            if self.dim == 2:
+                fieldarray[i] = function(self.points[i,0],self.points[i,1],0.0)
+            else:
+                fieldarray[i] = function(self.points[i,0],self.points[i,1],self.points[i,2])
         field_vtk = numpy_to_vtk(fieldarray)
         r = self.pdata.AddArray(field_vtk)
         self.pdata.GetArray(r).SetName(fieldname)
@@ -120,7 +123,13 @@ class VTUIO(object):
         fieldarray = np.zeros((len(self.points), mdim))
         for i,_ in enumerate(fieldarray):
             for j, func in enumerate(functionarray):
-                fieldarray[i,j] = func(
+                if self.dim == 2:
+                    fieldarray[i,j] = func(
+                        self.points[i,0],
+                        self.points[i,1],
+                        0.0)
+                else:
+                    fieldarray[i,j] = func(
                         self.points[i,0],
                         self.points[i,1],
                         self.points[i,2])
@@ -132,7 +141,7 @@ class VTUIO(object):
         writer.SetInputData(self.output)
         writer.Write()
 
-def writeField(self, field, fieldname, ofilename):
+    def writeField(self, field, fieldname, ofilename):
         field_vtk = numpy_to_vtk(field)
         r = self.pdata.AddArray(field_vtk)
         self.pdata.GetArray(r).SetName(fieldname)
