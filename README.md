@@ -1,244 +1,270 @@
-# Easy VTU interface 
+# VTUinterface 
 
-## python usage examples
+VTUinterface is a python package for easy accessing VTU/PVD files as outputed by Finite Element software like OpenGeoSys. It uses the VTK python wrapper and linear interpolation between time steps and grid points access any points in and and time within the simulation domain.
+While beeing a python package, it was also tested in Julia, where it can be accessed via PyCall:
 
-see examples directory
 
-## julia usage example
-
-Set the path for the correct python version for which the VTK wrapper/VTUIO is installed:
 ```julia
 ENV["PYTHON"] = "/usr/bin/python3"
+using Pkg
 Pkg.build("PyCall")
 ```
 
-### Load PyCall:
+    [32m[1m   Building[22m[39m Conda ─→ `~/.julia/packages/Conda/x5ml4/deps/build.log`
+    [32m[1m   Building[22m[39m PyCall → `~/.julia/packages/PyCall/tqyST/deps/build.log`
+
+
 
 ```julia
 using PyCall
-```
-### Load vtuIO:
-
-```julia
 @pyimport vtuIO
 ```
 
-### Read in the VTU file:
+VTUinterface together with ogs6py can be viewed in action here:
+
+[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/eihNKjK-I-s/0.jpg)](https://www.youtube.com/watch?v=eihNKjK-I-s)
+
+Single VTU files can be accessed via:
+
+# 1. reading a single VTU file
+
 
 ```julia
-data = vtuIO.VTUIO("THM-aniso_U3ts_14_t_1400000.000000.vtu")
+vtufile = vtuIO.VTUIO("examples/square_1e2_pcs_0_ts_1_t_1.000000.vtu", dim=2)
 ```
 
 
 
 
-    PyObject <vtuIO.VTUIO object at 0x7feb39c9bdf0>
+    PyObject <vtuIO.VTUIO object at 0x7f08f5dfd310>
 
 
+
+The `dim` argument is needed for correct interpolation. By defualt `dim=3` is assumed.
+Basic VTU properties, like fieldnames, points and the corresponding as provided by the unstructured grid VTK class: 
 
 
 ```julia
-a=data.getFieldnames()
+fields=vtufile.getFieldnames()
 ```
 
 
 
 
-    8-element Array{String,1}:
-     "HydraulicFlow"
-     "NodalForces"
-     "displacement"
+    4-element Array{String,1}:
+     "D1_left_bottom_N1_right"
+     "Linear_1_to_minus1"
      "pressure"
-     "pressure_interpolated"
-     "temperature"
-     "temperature_interpolated"
-     "blah"
+     "v"
 
 
 
 
 ```julia
-points = data.points
-```
-
-
-```julia
-p=data.getField("pressure")
+vtufile.points
 ```
 
 
 
 
-    42513-element Array{Float64,1}:
-         7.970611424973668e6
-         7.970099998745371e6
-         7.964305860621836e6
-         7.960754240222736e6
-         7.9664909133769935e6
-         7.967123032279523e6
-         7.963087129779444e6
-         7.960534460888565e6
-         7.968653263564663e6
-         7.959611572408052e6
-         7.963445087032362e6
-         7.959004283678057e6
-         7.943225086618663e6
-         ⋮
-     -5862.585898362064
-     -5636.525515643107
-     -6504.874632177117
-     -6444.823427852529
-     -6283.611377165704
-     -5855.711697312881
-     -6281.404017558704
-     -6773.052321466211
-     -5237.718109818229
-     -2540.7619881152586
-     -2260.7309630541195
-     -2682.609737272521
-
-
-## Alter the VTU file:
-
-### define new field
-
-```julia
-pMPa = p./1e6
-```
-
-
-
-
-    42513-element Array{Float64,1}:
-      7.970611424973668
-      7.97009999874537
-      7.964305860621836
-      7.9607542402227365
-      7.966490913376994
-      7.967123032279523
-      7.963087129779444
-      7.960534460888565
-      7.968653263564663
-      7.959611572408052
-      7.963445087032362
-      7.959004283678056
-      7.9432250866186624
-      ⋮
-     -0.005862585898362064
-     -0.005636525515643107
-     -0.006504874632177117
-     -0.006444823427852529
-     -0.006283611377165704
-     -0.0058557116973128815
-     -0.0062814040175587045
-     -0.00677305232146621
-     -0.005237718109818229
-     -0.0025407619881152588
-     -0.0022607309630541194
-     -0.002682609737272521
-
-### write new field/file
-
-
-```julia
-data.writeField(pMPa,"pressureMPa", "out.vtu")
-```
-
-### read in new file
-
-```julia
-data2 = vtuIO.VTUIO("out.vtu")
-```
-
-
-
-
-    PyObject <vtuIO.VTUIO object at 0x7feb34d9e0d0>
-
-### show all field names
-
-
-```julia
-data2.getFieldnames()
-```
-
-
-
-
-    9-element Array{String,1}:
-     "HydraulicFlow"
-     "NodalForces"
-     "displacement"
-     "pressure"
-     "pressure_interpolated"
-     "temperature"
-     "temperature_interpolated"
-     "blah"
-     "pressureMPa"
-
-
-
-## PVD files:
-
-
-```julia
-pvdfile = vtuIO.PVDIO("/home/joerg/FE_test/model_test/THM/", "THM-aniso.pvd")
-```
-
-
-
-
-    PyObject <vtuIO.PVDIO object at 0x7feb1bb8e670>
-
-
-Define a dictionary conating all points for which we want to extract time series data:
-
-```julia
-pts =Dict("pt0" =>(0.8,0.8,0.8))
-```
-
-
-
-
-    Dict{String,Tuple{Float64,Float64,Float64}} with 1 entry:
-      "pt0" => (0.8, 0.8, 0.8)
+    121×2 Array{Float64,2}:
+     0.0  0.0
+     0.1  0.0
+     0.2  0.0
+     0.3  0.0
+     0.4  0.0
+     0.5  0.0
+     0.6  0.0
+     0.7  0.0
+     0.8  0.0
+     0.9  0.0
+     1.0  0.0
+     0.0  0.1
+     0.1  0.1
+     ⋮    
+     1.0  0.9
+     0.0  1.0
+     0.1  1.0
+     0.2  1.0
+     0.3  1.0
+     0.4  1.0
+     0.5  1.0
+     0.6  1.0
+     0.7  1.0
+     0.8  1.0
+     0.9  1.0
+     1.0  1.0
 
 
 
 
 ```julia
-press_pt0=pvdfile.readTimeSeries("pressure", pts=pts)
+vtufile.getField("v")
 ```
 
 
 
 
-    Dict{Any,Any} with 1 entry:
-      "pt0" => [0.0, 182551.0, 536922.0, 739003.0, 948557.0, 1.15351e6, 1.34693e6, …
+    121×2 Array{Float64,2}:
+     2.0   0.0
+     2.0   1.62548e-16
+     2.0  -9.9123e-16
+     2.0  -9.39704e-16
+     2.0  -4.08897e-16
+     2.0   1.36785e-16
+     2.0  -3.23637e-16
+     2.0  -2.30016e-16
+     2.0  -7.69185e-16
+     2.0  -2.27994e-15
+     2.0   1.53837e-15
+     2.0   3.25096e-16
+     2.0  -3.62815e-16
+     ⋮    
+     2.0  -8.88178e-16
+     2.0   0.0
+     2.0  -2.22045e-16
+     2.0   9.9123e-16
+     2.0  -1.2648e-15
+     2.0   5.48137e-16
+     2.0  -3.89112e-17
+     2.0  -2.03185e-17
+     2.0  -1.02098e-15
+     2.0  -5.03586e-16
+     2.0  -3.37422e-15
+     2.0   8.88178e-16
+
+
+
+Aside basic VTU properties, the field data at any given point can be retrieved:
+
+
+```julia
+points = Dict("pt0"=> (0.5,0.5,0.0), "pt1"=> (0.2,0.2,0.0))
+```
+
+
+
+
+    Dict{String,Tuple{Float64,Float64,Float64}} with 2 entries:
+      "pt1" => (0.2, 0.2, 0.0)
+      "pt0" => (0.5, 0.5, 0.0)
 
 
 
 
 ```julia
-using Plots
+# Python: points={'pt0': (0.5,0.5,0.0), 'pt1': (0.2,0.2,0.0)} 
 ```
 
 
 ```julia
-plot(pvdfile.timesteps,press_pt0["pt0"])
+point_data = vtufile.getPointData("pressure", pts=points)
 ```
 
 
 
 
-![svg](output_19_0.svg)
+    Dict{Any,Any} with 2 entries:
+      "pt1" => 0.6
+      "pt0" => 3.41351e-17
+
+
+
+# 2. Writing VTU files
+some simple methods also exist for adding new fields to an existing VTU file or save it separately:
+
+
+```julia
+size = length(vtufile.getField("pressure"))
+```
+
+
+
+
+    121
 
 
 
 
 ```julia
+p0 = ones(size) * 1e6;
+```
+
+
+```julia
+# Python: size = len(vtufile.getField("pressure"))
+# p0 = np.ones() *1.0e6
+```
+
+
+```julia
+vtufile.writeField(p0, "initialPressure", "mesh_initialpressure.vtu")
+```
+
+
+```julia
 
 ```
+
+A new field can also created from a three-argument function for all space-dimensions:
+
+
+```julia
+function p_init(x,y,z)
+    if x < 0.5
+        return -0.5e6
+    else
+        return +0.5e6
+    end
+end
+```
+
+
+
+
+    p_init (generic function with 1 method)
+
+
+
+
+```julia
+# Python:
+# def p_init(x,y,z):
+#    if x<0.5:
+#        return -0.5e6
+#    else:
+#        return 0.5e6
+```
+
+
+```julia
+vtufile.func2Field(p_init, "p_init", "mesh_initialpressure.vtu")
+```
+
+It is also possible to write multidimensional arrays using a function.
+
+
+```julia
+function null(x,y,z)
+    return 0.0
+end
+```
+
+
+
+
+    null (generic function with 1 method)
+
+
+
+
+```julia
+vtufile.func2mdimField([p_init,p_init,null,null], "sigma00","mesh_initialpressure.vtu")
+```
+
+# Read PVD files:
+
+See examples/pvd*.py for further details.
 
 
 ```julia
