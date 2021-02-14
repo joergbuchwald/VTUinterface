@@ -9,7 +9,7 @@ from scipy.interpolate import griddata
 
 
 class VTUIO(object):
-    def __init__(self, filename, dim=3):
+    def __init__(self, filename, interpolation_method="linear", dim=3):
         self.filename = filename
         self.reader = vtkXMLUnstructuredGridReader()
         self.reader.SetFileName(self.filename)
@@ -18,6 +18,7 @@ class VTUIO(object):
         self.pdata = self.output.GetPointData()
         self.points = vtk_to_numpy(self.output.GetPoints().GetData())
         self.dim = dim
+        self.interpolation_method = interpolation_method
         if self.dim == 2:
             self.points = np.delete(self.points,2,1)
 
@@ -38,10 +39,10 @@ class VTUIO(object):
         for i, key in enumerate(points_interpol):
             if self.dim == 2:
                 grid_x, grid_y = np.mgrid[points_interpol[key][0]:(points_interpol[key][0]+0.1):1, points_interpol[key][1]:(points_interpol[key][1]+0.1):1]
-                resp[key] = griddata(self.points[neighbors[i]], field[neighbors[i]], (grid_x, grid_y), method='linear')[0][0]
+                resp[key] = griddata(self.points[neighbors[i]], field[neighbors[i]], (grid_x, grid_y), method=self.interpolation_method)[0][0]
             else:
                 grid_x, grid_y, grid_z = np.mgrid[points_interpol[key][0]:(points_interpol[key][0]+0.1):1, points_interpol[key][1]:(points_interpol[key][1]+0.1):1, points_interpol[key][2]:(points_interpol[key][2]+0.1):]
-                resp[key] = griddata(self.points[neighbors[i]], field[neighbors[i]], (grid_x, grid_y, grid_z), method='linear')[0][0][0]
+                resp[key] = griddata(self.points[neighbors[i]], field[neighbors[i]], (grid_x, grid_y, grid_z), method=self.interpolation_method)[0][0][0]
         return resp
 
     def getField(self, fieldname):
@@ -153,9 +154,10 @@ class VTUIO(object):
 
 
 class PVDIO(object):
-    def __init__(self, folder, filename, dim=3):
+    def __init__(self, folder, filename, interpolation_method="linear", dim=3):
         self.folder = folder
         self.filename = ""
+        self.interpolation_method = interpolation_method
         self.timesteps = np.array([])
         self.vtufilenames = []
         self.readPVD(os.path.join(folder,filename))
@@ -181,7 +183,7 @@ class PVDIO(object):
                 for field in fieldname:
                     resp_t[pt][field] = []
         for i, filename in enumerate(self.vtufilenames):
-            vtu = VTUIO(os.path.join(self.folder,filename), dim=self.dim)
+            vtu = VTUIO(os.path.join(self.folder,filename), interpolation_method=self.interpolation_method, dim=self.dim)
             if i == 0:
                 nb = vtu.getNeighbors(pts)
             if type(fieldname) is str:
