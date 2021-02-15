@@ -9,7 +9,7 @@ from scipy.interpolate import griddata
 
 
 class VTUIO(object):
-    def __init__(self, filename, interpolation_method="linear", dim=3):
+    def __init__(self, filename, interpolation_method="linear", nneighbors=20, dim=3):
         self.filename = filename
         self.reader = vtkXMLUnstructuredGridReader()
         self.reader.SetFileName(self.filename)
@@ -18,11 +18,13 @@ class VTUIO(object):
         self.pdata = self.output.GetPointData()
         self.points = vtk_to_numpy(self.output.GetPoints().GetData())
         self.dim = dim
+        self.nneighbors = nneighbors
         self.interpolation_method = interpolation_method
         if self.dim == 2:
             self.points = np.delete(self.points,2,1)
 
-    def getNeighbors(self, points_interpol, numneighbors=20):
+    def getNeighbors(self, points_interpol):
+        numneighbors=self.nneighbors
         df = pd.DataFrame(self.points)
         neighbors = {}
         for i, key in enumerate(points_interpol):
@@ -154,10 +156,11 @@ class VTUIO(object):
 
 
 class PVDIO(object):
-    def __init__(self, folder, filename, interpolation_method="linear", dim=3):
+    def __init__(self, folder, filename, interpolation_method="linear", nneighbors=20, dim=3):
         self.folder = folder
         self.filename = ""
         self.interpolation_method = interpolation_method
+        self.nneighbors = nneighbors
         self.timesteps = np.array([])
         self.vtufilenames = []
         self.readPVD(os.path.join(folder,filename))
@@ -183,7 +186,9 @@ class PVDIO(object):
                 for field in fieldname:
                     resp_t[pt][field] = []
         for i, filename in enumerate(self.vtufilenames):
-            vtu = VTUIO(os.path.join(self.folder,filename), interpolation_method=self.interpolation_method, dim=self.dim)
+            vtu = VTUIO(os.path.join(self.folder,filename),
+                    interpolation_method=self.interpolation_method,
+                    nneighbors=self.nneighbors, dim=self.dim)
             if i == 0:
                 nb = vtu.getNeighbors(pts)
             if type(fieldname) is str:
@@ -213,7 +218,9 @@ class PVDIO(object):
             if timestep == ts:
                 filename = self.vtufilenames[i]
         if not filename is None:
-            vtu = VTUIO(filename, dim=self.dim)
+            vtu = VTUIO(filename,
+                    interpolation_method=self.interpolation_method,
+                    nneighbors=self.nneighbors, dim=self.dim)
             field = vtu.getField(fieldname)
         else:
             filename1 = None
@@ -246,7 +253,9 @@ class PVDIO(object):
             if timestep == ts:
                 filename = self.vtufilenames[i]
         if not filename is None:
-            vtu = VTUIO(filename, dim=self.dim)
+            vtu = VTUIO(filename,
+                    interpolation_method=self.interpolation_method,
+                    nneighbors=self.nneighbors, dim=self.dim)
             field = vtu.getPointSetData(fieldname, pointsetarray)
         else:
             filename1 = None
@@ -265,7 +274,9 @@ class PVDIO(object):
             if (filename1 is None) or (filename2 is None):
                 print("time step is out of range")
             else:
-                vtu1 = VTUIO(filename1, dim=self.dim)
+                vtu1 = VTUIO(filename1,
+                    interpolation_method=self.interpolation_method,
+                    nneighbors=self.nneighbors, dim=self.dim)
                 vtu2 = VTUIO(filename2, dim=self.dim)
                 field1 = vtu1.getPointSetData(fieldname, pointsetarray)
                 field2 = vtu2.getPointSetData(fieldname, pointsetarray)
