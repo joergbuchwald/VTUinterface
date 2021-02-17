@@ -10,10 +10,6 @@ using Pkg
 Pkg.build("PyCall")
 ```
 
-    [32m[1m   Building[22m[39m Conda ─→ `~/.julia/packages/Conda/x5ml4/deps/build.log`
-    [32m[1m   Building[22m[39m PyCall → `~/.julia/packages/PyCall/tqyST/deps/build.log`
-
-
 
 ```julia
 using PyCall
@@ -479,9 +475,12 @@ ylabel!("p")
 
 
 
-# FAQ/Troubleshooting
+# Troubleshooting
 
 
-```julia
+As the input data is triangulated with QHull for the linear interpolation it might fail at boundaries or if a wrong input dimension is given.
+Possible solutions:
 
-```
+- Check the `dim` keyword. Two dimensional geometries assume spatial extents in x and y.
+- For some meshes it might help to adjust the number of points taken into account by the triangulation, which can be done using the `nneighbors` keyword. Default value is 20.
+- Especially along boundaries, nearest neighbor interpolation should be preferred. 
