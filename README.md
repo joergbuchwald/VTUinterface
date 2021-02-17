@@ -36,7 +36,7 @@ vtufile = vtuIO.VTUIO("examples/square_1e2_pcs_0_ts_1_t_1.000000.vtu", dim=2)
 
 
 
-    PyObject <vtuIO.VTUIO object at 0x7f08f5dfd310>
+    PyObject <vtuIO.VTUIO object at 0x7f994b2df340>
 
 
 
@@ -262,9 +262,224 @@ end
 vtufile.func2mdimField([p_init,p_init,null,null], "sigma00","mesh_initialpressure.vtu")
 ```
 
-# Read PVD files:
+# 3. Reading time-series data from PVD files:
 
-See examples/pvd*.py for further details.
+Similar to reading VTU files, it is possible extract time series data from a list of vtufiles given as a PVD file. For extracting grid data at arbitrary points within the mesh, there are two methods available. The stadard method is linear interpolation between cell nodes and the other is the value of the closest node:
+
+
+```julia
+pvdfile = vtuIO.PVDIO("examples", "square_1e2_pcs_0.pvd", dim=2)
+```
+
+
+
+
+    PyObject <vtuIO.PVDIO object at 0x7f994b2b79d0>
+
+
+
+
+```julia
+pvdfile_nearest = vtuIO.PVDIO("examples", "square_1e2_pcs_0.pvd", interpolation_method="nearest", dim=2)
+```
+
+
+
+
+    PyObject <vtuIO.PVDIO object at 0x7f99538d3c70>
+
+
+
+Timesteps can be obtained through the timesteps instance variable:
+
+
+```julia
+time = pvdfile.timesteps
+```
+
+
+
+
+    2-element Array{Float64,1}:
+     0.0
+     1.0
+
+
+
+
+```julia
+
+```
+
+
+```julia
+points = Dict("pt0"=> (0.3,0.5,0.0), "pt1"=> (0.24,0.21,0.0))
+```
+
+
+
+
+    Dict{String,Tuple{Float64,Float64,Float64}} with 2 entries:
+      "pt1" => (0.24, 0.21, 0.0)
+      "pt0" => (0.3, 0.5, 0.0)
+
+
+
+
+```julia
+# Python: points={'pt0': (0.5,0.5,0.0), 'pt1': (0.2,0.2,0.0)} 
+```
+
+
+```julia
+pressure_linear = pvdfile.readTimeSeries("pressure", points)
+```
+
+
+
+
+    Dict{Any,Any} with 2 entries:
+      "pt1" => [0.0, 0.52]
+      "pt0" => [0.0, 0.4]
+
+
+
+
+```julia
+pressure_nearest = pvdfile_nearest.readTimeSeries("pressure", points)
+```
+
+
+
+
+    Dict{Any,Any} with 2 entries:
+      "pt1" => [0.0, 0.6]
+      "pt0" => [0.0, 0.4]
+
+
+
+
+```julia
+using Plots
+```
+
+As point pt0 is a node in the mesh, both values at $t=1$ agree, whereas pt1 is not a mesh node point resulting in different values.
+
+
+```julia
+plot(time, pressure_linear["pt0"], color=:blue, linestyle=:dot, label="pt0 linear interpolated", legend=:topleft)
+plot!(time, pressure_nearest["pt0"], color=:blue, linestyle=:dash, label="pt0 closest point value")
+plot!(time, pressure_linear["pt1"], color=:red, linestyle=:dot, label="pt1 linear interpolated")
+plot!(time, pressure_nearest["pt1"], color=:red, linestyle=:dash, label="pt1 closest point value")
+xlabel!("t")
+ylabel!("p")
+```
+
+
+
+
+    
+![svg](output_40_0.svg)
+    
+
+
+
+# 4. Reading point set data from PVD files
+
+Define two discretized axes:
+
+
+```julia
+xaxis =  [(i,0,0) for i in 0:0.01:1]
+diagonal = [(i,i,0) for i in 0:0.01:1]
+```
+
+
+
+
+    101-element Array{Tuple{Float64,Float64,Int64},1}:
+     (0.0, 0.0, 0)
+     (0.01, 0.01, 0)
+     (0.02, 0.02, 0)
+     (0.03, 0.03, 0)
+     (0.04, 0.04, 0)
+     (0.05, 0.05, 0)
+     (0.06, 0.06, 0)
+     (0.07, 0.07, 0)
+     (0.08, 0.08, 0)
+     (0.09, 0.09, 0)
+     (0.1, 0.1, 0)
+     (0.11, 0.11, 0)
+     (0.12, 0.12, 0)
+     ⋮
+     (0.89, 0.89, 0)
+     (0.9, 0.9, 0)
+     (0.91, 0.91, 0)
+     (0.92, 0.92, 0)
+     (0.93, 0.93, 0)
+     (0.94, 0.94, 0)
+     (0.95, 0.95, 0)
+     (0.96, 0.96, 0)
+     (0.97, 0.97, 0)
+     (0.98, 0.98, 0)
+     (0.99, 0.99, 0)
+     (1.0, 1.0, 0)
+
+
+
+The data along these axes should be extracted at two arbitrary distinct times (between the existing timeframes t=0.0 and t=1):
+
+
+```julia
+t1 = 0.2543
+t2 = 0.9
+```
+
+
+
+
+    0.9
+
+
+
+
+```julia
+pressure_xaxis_t1 = pvdfile.readPointSetData(t1, "pressure", pointsetarray=xaxis);
+pressure_diagonal_t1 = pvdfile.readPointSetData(t1, "pressure", pointsetarray=diagonal);
+pressure_xaxis_t2 = pvdfile.readPointSetData(t2, "pressure", pointsetarray=xaxis);
+pressure_diagonal_t2 = pvdfile.readPointSetData(t2, "pressure", pointsetarray=diagonal);
+```
+
+
+```julia
+r_x = first.(xaxis[:]);
+```
+
+
+```julia
+r_diag = sqrt.(first.(diagonal[:]).^2 + getindex.(diagonal[:],2).^2);
+```
+
+
+```julia
+plot(r_x, pressure_xaxis_t1, label="p_x t=t1")
+plot!(r_diag, pressure_diagonal_t1, label="p_diag t=t1")
+plot!(r_x, pressure_xaxis_t2, label="p_x t=t1")
+plot!(r_diag, pressure_diagonal_t2, label="p_diag t=t1")
+xlabel!("r")
+ylabel!("p")
+```
+
+
+
+
+    
+![svg](output_49_0.svg)
+    
+
+
+
+# FAQ/Troubleshooting
 
 
 ```julia
