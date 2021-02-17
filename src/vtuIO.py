@@ -218,7 +218,7 @@ class PVDIO(object):
             if timestep == ts:
                 filename = self.vtufilenames[i]
         if not filename is None:
-            vtu = VTUIO(filename,
+            vtu = VTUIO(os.path.join(self.folder,filename),
                     interpolation_method=self.interpolation_method,
                     nneighbors=self.nneighbors, dim=self.dim)
             field = vtu.getField(fieldname)
@@ -239,8 +239,12 @@ class PVDIO(object):
             if (filename1 is None) or (filename2 is None):
                 print("time step is out of range")
             else:
-                vtu1 = VTUIO(filename1, dim=self.dim)
-                vtu2 = VTUIO(filename2, dim=self.dim)
+                vtu1 = VTUIO(os.path.join(self.folder,filename1),
+                        interpolation_method=self.interpolation_method,
+                        nneighbors=self.nneighbors, dim=self.dim)
+                vtu2 = VTUIO(os.path.join(self.folder,filename2),
+                        interpolation_method=self.interpolation_method,
+                        nneighbors=self.nneighbors, dim=self.dim)
                 field1 = vtu1.getField(fieldname)
                 field2 = vtu2.getField(fieldname)
                 fieldslope = (field2-field1)/(timestep2-timestep1)
@@ -253,7 +257,7 @@ class PVDIO(object):
             if timestep == ts:
                 filename = self.vtufilenames[i]
         if not filename is None:
-            vtu = VTUIO(filename,
+            vtu = VTUIO(os.path.join(self.folder,filename),
                     interpolation_method=self.interpolation_method,
                     nneighbors=self.nneighbors, dim=self.dim)
             field = vtu.getPointSetData(fieldname, pointsetarray)
@@ -274,10 +278,12 @@ class PVDIO(object):
             if (filename1 is None) or (filename2 is None):
                 print("time step is out of range")
             else:
-                vtu1 = VTUIO(filename1,
+                vtu1 = VTUIO(os.path.join(self.folder,filename1),
                     interpolation_method=self.interpolation_method,
                     nneighbors=self.nneighbors, dim=self.dim)
-                vtu2 = VTUIO(filename2, dim=self.dim)
+                vtu2 = VTUIO(os.path.join(self.folder,filename2),
+                        interpolation_method=self.interpolation_method,
+                    nneighbors=self.nneighbors, dim=self.dim)
                 field1 = vtu1.getPointSetData(fieldname, pointsetarray)
                 field2 = vtu2.getPointSetData(fieldname, pointsetarray)
                 fieldslope = (field2-field1)/(timestep2-timestep1)
