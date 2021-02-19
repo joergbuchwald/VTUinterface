@@ -27,24 +27,26 @@ class VTUIO(object):
         numneighbors=self.nneighbors
         df = pd.DataFrame(self.points)
         neighbors = {}
-        for i, key in enumerate(points_interpol):
+        for i, (key, val) in enumerate(points_interpol.items()):
             if self.dim == 2:
-                df["r_"+str(i)]=(df[0]-points_interpol[key][0])*(df[0]-points_interpol[key][0])+(df[1]-points_interpol[key][1])*(df[1]-points_interpol[key][1])
+                df["r_"+str(i)] = (df[0]-val[0]) * (df[0]-val[0]) + (df[1]-val[1]) * (df[1]-val[1])
             else:
-                df["r_"+str(i)]=(df[0]-points_interpol[key][0])*(df[0]-points_interpol[key][0])+(df[1]-points_interpol[key][1])*(df[1]-points_interpol[key][1])+(df[2]-points_interpol[key][2])*(df[2]-points_interpol[key][2])
+                df["r_"+str(i)] = (df[0]-val[0]) * (df[0]-val[0]) + (df[1]-val[1]) * (df[1]-val[1]) + (df[2]-val[2])*(df[2]-val[2])
             neighbors[i] = df.sort_values(by=["r_"+str(i)]).head(numneighbors).index
         return neighbors
 
     def getData(self, neighbors, points_interpol, fieldname):
         field = self.getField(fieldname)
         resp = {}
-        for i, key in enumerate(points_interpol):
+        for i, (key, val) in enumerate(points_interpol.items()):
             if self.dim == 2:
-                grid_x, grid_y = np.mgrid[points_interpol[key][0]:(points_interpol[key][0]+0.1):1, points_interpol[key][1]:(points_interpol[key][1]+0.1):1]
-                resp[key] = griddata(self.points[neighbors[i]], field[neighbors[i]], (grid_x, grid_y), method=self.interpolation_method)[0][0]
+                grid_x, grid_y = np.mgrid[val[0]:(val[0]+0.1):1, val[1]:(val[1]+0.1):1]
+                resp[key] = griddata(self.points[neighbors[i]], field[neighbors[i]], (grid_x, grid_y),
+                        method=self.interpolation_method)[0][0]
             else:
-                grid_x, grid_y, grid_z = np.mgrid[points_interpol[key][0]:(points_interpol[key][0]+0.1):1, points_interpol[key][1]:(points_interpol[key][1]+0.1):1, points_interpol[key][2]:(points_interpol[key][2]+0.1):]
-                resp[key] = griddata(self.points[neighbors[i]], field[neighbors[i]], (grid_x, grid_y, grid_z), method=self.interpolation_method)[0][0][0]
+                grid_x, grid_y, grid_z = np.mgrid[val[0]:(val[0]+0.1):1, val[1]:(val[1]+0.1):1, val[2]:(val[2]+0.1):]
+                resp[key] = griddata(self.points[neighbors[i]], field[neighbors[i]], (grid_x, grid_y, grid_z),
+                        method=self.interpolation_method)[0][0][0]
         return resp
 
     def getField(self, fieldname):
@@ -203,13 +205,13 @@ class PVDIO(object):
                     for field in fieldname:
                         resp_t[pt][field].append(data[field][pt])
         resp_t_array = {}
-        for pt in resp_t:
+        for pt, field in resp_t.items():
             if type(fieldname) is str:
-                resp_t_array[pt] = np.array(resp_t[pt])
+                resp_t_array[pt] = np.array(field)
             elif type(fieldname) is list:
                 resp_t_array[pt] = {}
-                for field in resp_t[pt]:
-                    resp_t_array[pt][field] = np.array(resp_t[pt][field])
+                for fieldname, fieldarray in resp_t[pt].items():
+                    resp_t_array[pt][fieldname] = np.array(fieldarray)
         return resp_t_array
 
     def readTimeStep(self, timestep, fieldname):
