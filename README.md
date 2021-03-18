@@ -20,6 +20,16 @@ VTUinterface together with ogs6py can be viewed in action here:
 
 [![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/eihNKjK-I-s/0.jpg)](https://www.youtube.com/watch?v=eihNKjK-I-s)
 
+# 0. Installation
+
+clone the repository and use pip to install the package
+
+```shell
+# git clone https://github.com/joergbuchwald/VTUinterface.git
+# cd VTUinterface
+# pip install --user .
+```
+
 Single VTU files can be accessed via:
 
 # 1. reading a single VTU file
