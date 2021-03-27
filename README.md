@@ -29,6 +29,10 @@ clone the repository and use pip to install the package
 # cd VTUinterface
 # pip install --user .
 ```
+or with root permissions:
+```shell
+# pip install .
+```
 
 Single VTU files can be accessed via:
 
