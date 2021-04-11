@@ -59,7 +59,9 @@ class VTUIO(object):
             fieldnames.append(self.pdata.GetArrayName(i))
         return fieldnames
 
-    def getPointData(self, fieldname, pts = {'pt0': (0.0,0.0,0.0)}):
+    def getPointData(self, fieldname, pts = None):
+        if pts is None:
+            pts = {'pt0': (0.0,0.0,0.0)}
         resp = {}
         for pt in pts:
             if type(fieldname) is str:
@@ -82,7 +84,9 @@ class VTUIO(object):
                     resp[pt][field]=data[field][pt]
         return resp
 
-    def getPointSetData(self, fieldname, pointsetarray =[(0,0,0)]):
+    def getPointSetData(self, fieldname, pointsetarray=None):
+        if pointsetarray is None:
+            pointsetarray =[(0,0,0)]
         pts = {}
         # convert into point dictionary
         for i, entry in enumerate(pointsetarray):
@@ -178,7 +182,9 @@ class PVDIO(object):
                 self.timesteps = np.append(self.timesteps, [float(dataset.attrib['timestep'])])
                 self.vtufilenames.append(dataset.attrib['file'])
 
-    def readTimeSeries(self,fieldname, pts = {'pt0': (0.0,0.0,0.0)}):
+    def readTimeSeries(self,fieldname, pts=None):
+        if pts is None:
+            pts = {'pt0': (0.0,0.0,0.0)}
         resp_t = {}
         for pt in pts:
             if type(fieldname) is str:
@@ -253,7 +259,9 @@ class PVDIO(object):
                 field = field1 + fieldslope * (timestep-timestep1)
         return field
 
-    def readPointSetData(self, timestep, fieldname, pointsetarray =[(0,0,0)]):
+    def readPointSetData(self, timestep, fieldname, pointsetarray = None):
+        if pointsetarray is None:
+            pointsetarray =[(0,0,0)]
         filename = None
         for i, ts in enumerate(self.timesteps):
             if timestep == ts:
