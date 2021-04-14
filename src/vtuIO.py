@@ -10,6 +10,7 @@ from scipy.interpolate import griddata
 
 class VTUIO(object):
     def __init__(self, filename, interpolation_method="linear", nneighbors=20, dim=3):
+        print(filename)
         self.filename = filename
         self.reader = vtkXMLUnstructuredGridReader()
         self.reader.SetFileName(self.filename)
@@ -194,7 +195,10 @@ class PVDIO(object):
                 for field in fieldname:
                     resp_t[pt][field] = []
         for i, filename in enumerate(self.vtufilenames):
-            vtu = VTUIO(os.path.join(self.folder,filename),
+            # quick and dirty trick for serial pvtu files:
+            # TODO: real handling of parallel files
+            fn_new = filename.replace(".pvtu", "_0.vtu")
+            vtu = VTUIO(os.path.join(self.folder,fn_new),
                     interpolation_method=self.interpolation_method,
                     nneighbors=self.nneighbors, dim=self.dim)
             if i == 0:
@@ -216,8 +220,8 @@ class PVDIO(object):
                 resp_t_array[pt] = np.array(field)
             elif type(fieldname) is list:
                 resp_t_array[pt] = {}
-                for fieldname, fieldarray in resp_t[pt].items():
-                    resp_t_array[pt][fieldname] = np.array(fieldarray)
+                for field_, fieldarray in resp_t[pt].items():
+                    resp_t_array[pt][field_] = np.array(fieldarray)
         return resp_t_array
 
     def readTimeStep(self, timestep, fieldname):
