@@ -7,8 +7,13 @@ While beeing a python package, it was also tested in Julia, where it can be acce
 ```julia
 ENV["PYTHON"] = "/usr/bin/python3"
 using Pkg
+#Pkg.add("PyCall")
 Pkg.build("PyCall")
 ```
+
+    [32m[1m    Building[22m[39m Conda ─→ `~/.julia/scratchspaces/44cfe95a-1eb2-52ea-b672-e2afdf69b78f/6231e40619c15148bcb80aa19d731e629877d762/build.log`
+    [32m[1m    Building[22m[39m PyCall → `~/.julia/scratchspaces/44cfe95a-1eb2-52ea-b672-e2afdf69b78f/169bb8ea6b1b143c5cf57df6d34d022a7b60c6db/build.log`
+
 
 
 ```julia
@@ -29,10 +34,6 @@ clone the repository and use pip to install the package
 # cd VTUinterface
 # pip install --user .
 ```
-or with root permissions:
-```shell
-# pip install .
-```
 
 Single VTU files can be accessed via:
 
@@ -46,7 +47,7 @@ vtufile = vtuIO.VTUIO("examples/square_1e2_pcs_0_ts_1_t_1.000000.vtu", dim=2)
 
 
 
-    PyObject <vtuIO.VTUIO object at 0x7f994b2df340>
+    PyObject <vtuIO.VTUIO object at 0x7f3f1ac976d0>
 
 
 
@@ -61,7 +62,7 @@ fields=vtufile.getFieldnames()
 
 
 
-    4-element Array{String,1}:
+    4-element Vector{String}:
      "D1_left_bottom_N1_right"
      "Linear_1_to_minus1"
      "pressure"
@@ -77,7 +78,7 @@ vtufile.points
 
 
 
-    121×2 Array{Float64,2}:
+    121×2 Matrix{Float64}:
      0.0  0.0
      0.1  0.0
      0.2  0.0
@@ -115,7 +116,7 @@ vtufile.getField("v")
 
 
 
-    121×2 Array{Float64,2}:
+    121×2 Matrix{Float64}:
      2.0   0.0
      2.0   1.62548e-16
      2.0  -9.9123e-16
@@ -155,7 +156,7 @@ points = Dict("pt0"=> (0.5,0.5,0.0), "pt1"=> (0.2,0.2,0.0))
 
 
 
-    Dict{String,Tuple{Float64,Float64,Float64}} with 2 entries:
+    Dict{String, Tuple{Float64, Float64, Float64}} with 2 entries:
       "pt1" => (0.2, 0.2, 0.0)
       "pt0" => (0.5, 0.5, 0.0)
 
@@ -174,7 +175,7 @@ point_data = vtufile.getPointData("pressure", pts=points)
 
 
 
-    Dict{Any,Any} with 2 entries:
+    Dict{Any, Any} with 2 entries:
       "pt1" => 0.6
       "pt0" => 3.41351e-17
 
@@ -284,7 +285,7 @@ pvdfile = vtuIO.PVDIO("examples", "square_1e2_pcs_0.pvd", dim=2)
 
 
 
-    PyObject <vtuIO.PVDIO object at 0x7f994b2b79d0>
+    PyObject <vtuIO.PVDIO object at 0x7f3efc285eb0>
 
 
 
@@ -296,7 +297,7 @@ pvdfile_nearest = vtuIO.PVDIO("examples", "square_1e2_pcs_0.pvd", interpolation_
 
 
 
-    PyObject <vtuIO.PVDIO object at 0x7f99538d3c70>
+    PyObject <vtuIO.PVDIO object at 0x7f3f1ac8e190>
 
 
 
@@ -310,7 +311,7 @@ time = pvdfile.timesteps
 
 
 
-    2-element Array{Float64,1}:
+    2-element Vector{Float64}:
      0.0
      1.0
 
@@ -329,7 +330,7 @@ points = Dict("pt0"=> (0.3,0.5,0.0), "pt1"=> (0.24,0.21,0.0))
 
 
 
-    Dict{String,Tuple{Float64,Float64,Float64}} with 2 entries:
+    Dict{String, Tuple{Float64, Float64, Float64}} with 2 entries:
       "pt1" => (0.24, 0.21, 0.0)
       "pt0" => (0.3, 0.5, 0.0)
 
@@ -348,7 +349,7 @@ pressure_linear = pvdfile.readTimeSeries("pressure", points)
 
 
 
-    Dict{Any,Any} with 2 entries:
+    Dict{Any, Any} with 2 entries:
       "pt1" => [0.0, 0.52]
       "pt0" => [0.0, 0.4]
 
@@ -362,7 +363,7 @@ pressure_nearest = pvdfile_nearest.readTimeSeries("pressure", points)
 
 
 
-    Dict{Any,Any} with 2 entries:
+    Dict{Any, Any} with 2 entries:
       "pt1" => [0.0, 0.6]
       "pt0" => [0.0, 0.4]
 
@@ -407,7 +408,7 @@ diagonal = [(i,i,0) for i in 0:0.01:1]
 
 
 
-    101-element Array{Tuple{Float64,Float64,Int64},1}:
+    101-element Vector{Tuple{Float64, Float64, Int64}}:
      (0.0, 0.0, 0)
      (0.01, 0.01, 0)
      (0.02, 0.02, 0)
@@ -489,6 +490,8 @@ ylabel!("p")
 
 
 
+# FAQ/Troubleshooting
+
 # Troubleshooting
 
 
@@ -498,3 +501,8 @@ Possible solutions:
 - Check the `dim` keyword. Two dimensional geometries assume spatial extents in x and y.
 - For some meshes it might help to adjust the number of points taken into account by the triangulation, which can be done using the `nneighbors` keyword. Default value is 20.
 - Especially along boundaries, nearest neighbor interpolation should be preferred. 
+
+
+```julia
+
+```
