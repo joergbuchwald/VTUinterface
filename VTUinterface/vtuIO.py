@@ -10,7 +10,6 @@ from scipy.interpolate import griddata
 
 class VTUIO(object):
     def __init__(self, filename, interpolation_method="linear", nneighbors=20, dim=3):
-        print(filename)
         self.filename = filename
         self.reader = vtkXMLUnstructuredGridReader()
         self.reader.SetFileName(self.filename)
