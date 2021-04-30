@@ -10,6 +10,7 @@ and finally the data field "pressure" read and printed
 '''
 
 import matplotlib.pyplot as plt 	# for fancy plots
+import matplotlib.tri as tri    # for triangulation
 
 import vtuIO	# to read and process (point interpolation) vtu- and pvd-files 
 # class methods for information
@@ -34,10 +35,18 @@ points=data.points
 print("points:")
 print(points)
 
-pressure_field=data.getField("pressure")
+pressure_field = data.getField("pressure")
 print("pressure at points")
 print(pressure_field)
 
 
 point_data = data.getPointData("pressure", pts={'pt0':(0.5,0.5,0.4)})
 print(point_data)
+
+# contour plot
+
+triang=tri.Triangulation(points[:,0],points[:,1])
+fig, ax = plt.subplots(ncols=1,figsize=(20,8))
+contour = ax.tricontourf(triang, pressure_field)
+fig.colorbar(contour,ax=ax,label='p (Pa)')
+plt.show()
