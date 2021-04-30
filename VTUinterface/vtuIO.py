@@ -40,11 +40,11 @@ class VTUIO(object):
         resp = {}
         for i, (key, val) in enumerate(points_interpol.items()):
             if self.dim == 2:
-                grid_x, grid_y = np.mgrid[val[0]:(val[0]+0.1):1, val[1]:(val[1]+0.1):1]
+                grid_x, grid_y = np.array([[[val[0]]],[[val[1]]]])
                 resp[key] = griddata(self.points[neighbors[i]], field[neighbors[i]], (grid_x, grid_y),
                         method=self.interpolation_method)[0][0]
             else:
-                grid_x, grid_y, grid_z = np.mgrid[val[0]:(val[0]+0.1):1, val[1]:(val[1]+0.1):1, val[2]:(val[2]+0.1):]
+                grid_x, grid_y, grid_z = np.array([[[[val[0]]]], [[[val[1]]]], [[[val[2]]]]])
                 resp[key] = griddata(self.points[neighbors[i]], field[neighbors[i]], (grid_x, grid_y, grid_z),
                         method=self.interpolation_method)[0][0][0]
         return resp
