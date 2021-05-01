@@ -150,6 +150,20 @@ class VTUIO(object):
         writer.SetInputData(self.output)
         writer.Write()
 
+    def pointdata2celldata(self, fieldname, ofilename):
+        p2c = vtkPointDataToCellData()
+        p2c.SetInputData(self.output)
+        p2c.Update()
+        outcells = p2c.GetOutput()
+        cells = outcells.GetCellData()
+        array =  cells.GetArray(fieldname)
+        cells_orig = self.output.GetCellData()
+        cells_orig.AddArray(array)
+        writer = vtkXMLUnstructuredGridWriter()
+        writer.SetFileName(ofilename)
+        writer.SetInputData(self.output)
+        writer.Write()
+
     def writeField(self, field, fieldname, ofilename):
         field_vtk = numpy_to_vtk(field)
         r = self.pdata.AddArray(field_vtk)
