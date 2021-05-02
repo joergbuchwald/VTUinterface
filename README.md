@@ -1,5 +1,6 @@
 [![DOI](https://zenodo.org/badge/282728412.svg)](https://zenodo.org/badge/latestdoi/282728412)
 
+
 # VTUinterface 
 
 VTUinterface is a python package for easy accessing VTU/PVD files as outputed by Finite Element software like OpenGeoSys. It uses the VTK python wrapper and linear interpolation between time steps and grid points access any points in and and time within the simulation domain.
@@ -12,10 +13,6 @@ using Pkg
 #Pkg.add("PyCall")
 Pkg.build("PyCall")
 ```
-
-    [32m[1m    Building[22m[39m Conda ─→ `~/.julia/scratchspaces/44cfe95a-1eb2-52ea-b672-e2afdf69b78f/6231e40619c15148bcb80aa19d731e629877d762/build.log`
-    [32m[1m    Building[22m[39m PyCall → `~/.julia/scratchspaces/44cfe95a-1eb2-52ea-b672-e2afdf69b78f/169bb8ea6b1b143c5cf57df6d34d022a7b60c6db/build.log`
-
 
 
 ```julia
@@ -49,12 +46,12 @@ vtufile = vtuIO.VTUIO("examples/square_1e2_pcs_0_ts_1_t_1.000000.vtu", dim=2)
 
 
 
-    PyObject <vtuIO.VTUIO object at 0x7f3f1ac976d0>
+    PyObject <vtuIO.VTUIO object at 0x7f3820fc7dc0>
 
 
 
 The `dim` argument is needed for correct interpolation. By defualt `dim=3` is assumed.
-Basic VTU properties, like fieldnames, points and the corresponding as provided by the unstructured grid VTK class: 
+Basic VTU properties, like fieldnames, points and corresponding fielddata as provided by the unstructured grid VTK class can be simply accessed as follows: 
 
 
 ```julia
@@ -183,12 +180,142 @@ point_data = vtufile.getPointData("pressure", pts=points)
 
 
 
+## 1.1 Creating contour plots
+
+
+```julia
+using PyPlot
+```
+
+
+```julia
+# Python: import matplotlib.pyplot as plt
+#import matplotlib.tri as tri
+```
+
+
+```julia
+vtufile = vtuIO.VTUIO("examples/square2d_random.vtu", dim=2)
+```
+
+
+
+
+    PyObject <vtuIO.VTUIO object at 0x7f3848298fd0>
+
+
+
+
+```julia
+field = vtufile.getField("gaussian_field_2");
+```
+
+
+```julia
+triang = matplotlib.tri.Triangulation(vtufile.points[:,1], vtufile.points[:,2])
+```
+
+
+
+
+    PyObject <matplotlib.tri.triangulation.Triangulation object at 0x7f3848298850>
+
+
+
+
+```julia
+# Python: triang = tri.Triangulation(vtufile.points[:,0], vtufile.points[:,1])
+# plt.tricontourf(triang,field)
+```
+
+
+```julia
+tricontourf(triang,field)
+```
+
+
+    
+![png](output_21_0.png)
+    
+
+
+
+
+
+    PyObject <matplotlib.tri.tricontour.TriContourSet object at 0x7f389ed33460>
+
+
+
+### _This random field was created using the ranmedi package:_ https://github.com/joergbuchwald/ranmedi/
+
+## 1.2 Extracting Pointsetdata
+
+There are basically three interpolation methods available for extracting data at arbitrary points (`cubic` is only available for 1D and 2D). The default is `linear`.
+
+
+```julia
+methods = ["nearest", "linear", "cubic"];
+```
+
+
+```julia
+diagonal = [(i,i,0) for i in 0:0.1:64];
+```
+
+
+```julia
+vtufile = Dict()
+data_diag = Dict()
+for method in methods
+    vtufile[method] = vtuIO.VTUIO("examples/square2d_random.vtu", interpolation_method=method,dim=2)
+    data_diag[method] = vtufile[method].getPointSetData("gaussian_field_2", pointsetarray=diagonal)
+end
+```
+
+
+```julia
+r_diag = sqrt.(first.(diagonal[:]).^2 + getindex.(diagonal[:],2).^2);
+```
+
+
+```julia
+plot(r_diag, data_diag["nearest"], label="nearest")
+plot(r_diag, data_diag["linear"], label="linear")
+plot(r_diag, data_diag["cubic"], label="cubic")
+legend()
+```
+
+
+    
+![png](output_28_0.png)
+    
+
+
+
+
+
+    PyObject <matplotlib.legend.Legend object at 0x7f382131dca0>
+
+
+
 # 2. Writing VTU files
 some simple methods also exist for adding new fields to an existing VTU file or save it separately:
 
 
 ```julia
-size = length(vtufile.getField("pressure"))
+vtufile = vtuIO.VTUIO("examples/square_1e2_pcs_0_ts_1_t_1.000000.vtu", dim=2)
+```
+
+
+
+
+    PyObject <vtuIO.VTUIO object at 0x7f389322af70>
+
+
+
+
+```julia
+p_size = length(vtufile.getField("pressure"))
 ```
 
 
@@ -200,7 +327,7 @@ size = length(vtufile.getField("pressure"))
 
 
 ```julia
-p0 = ones(size) * 1e6;
+p0 = ones(p_size) * 1e6;
 ```
 
 
@@ -212,11 +339,6 @@ p0 = ones(size) * 1e6;
 
 ```julia
 vtufile.writeField(p0, "initialPressure", "mesh_initialpressure.vtu")
-```
-
-
-```julia
-
 ```
 
 A new field can also created from a three-argument function for all space-dimensions:
@@ -287,7 +409,7 @@ pvdfile = vtuIO.PVDIO("examples", "square_1e2_pcs_0.pvd", dim=2)
 
 
 
-    PyObject <vtuIO.PVDIO object at 0x7f3efc285eb0>
+    PyObject <vtuIO.PVDIO object at 0x7f3844817ee0>
 
 
 
@@ -299,7 +421,7 @@ pvdfile_nearest = vtuIO.PVDIO("examples", "square_1e2_pcs_0.pvd", interpolation_
 
 
 
-    PyObject <vtuIO.PVDIO object at 0x7f3f1ac8e190>
+    PyObject <vtuIO.PVDIO object at 0x7f384480ea00>
 
 
 
@@ -380,20 +502,25 @@ As point pt0 is a node in the mesh, both values at $t=1$ agree, whereas pt1 is n
 
 
 ```julia
-plot(time, pressure_linear["pt0"], color=:blue, linestyle=:dot, label="pt0 linear interpolated", legend=:topleft)
-plot!(time, pressure_nearest["pt0"], color=:blue, linestyle=:dash, label="pt0 closest point value")
-plot!(time, pressure_linear["pt1"], color=:red, linestyle=:dot, label="pt1 linear interpolated")
-plot!(time, pressure_nearest["pt1"], color=:red, linestyle=:dash, label="pt1 closest point value")
-xlabel!("t")
-ylabel!("p")
+plot(time, pressure_linear["pt0"], "b-", label="pt0 linear interpolated")
+plot(time, pressure_nearest["pt0"], "b--", label="pt0 closest point value")
+plot(time, pressure_linear["pt1"], "r-", label="pt1 linear interpolated")
+plot(time, pressure_nearest["pt1"], "r--", label="pt1 closest point value")
+legend()
+xlabel("t")
+ylabel("p")
 ```
 
 
+    
+![png](output_55_0.png)
+    
 
 
-    
-![svg](output_40_0.svg)
-    
+
+
+
+    PyObject Text(24.000000000000007, 0.5, 'p')
 
 
 
@@ -476,19 +603,24 @@ r_diag = sqrt.(first.(diagonal[:]).^2 + getindex.(diagonal[:],2).^2);
 
 ```julia
 plot(r_x, pressure_xaxis_t1, label="p_x t=t1")
-plot!(r_diag, pressure_diagonal_t1, label="p_diag t=t1")
-plot!(r_x, pressure_xaxis_t2, label="p_x t=t1")
-plot!(r_diag, pressure_diagonal_t2, label="p_diag t=t1")
-xlabel!("r")
-ylabel!("p")
+plot(r_diag, pressure_diagonal_t1, label="p_diag t=t1")
+plot(r_x, pressure_xaxis_t2, label="p_x t=t1")
+plot(r_diag, pressure_diagonal_t2, label="p_diag t=t1")
+xlabel("r")
+ylabel("p")
+legend()
 ```
 
 
+    
+![png](output_64_0.png)
+    
 
 
-    
-![svg](output_49_0.svg)
-    
+
+
+
+    PyObject <matplotlib.legend.Legend object at 0x7f3820fabeb0>
 
 
 
@@ -500,9 +632,9 @@ ylabel!("p")
 As the input data is triangulated with QHull for the linear interpolation it might fail at boundaries or if a wrong input dimension is given.
 Possible solutions:
 
-- Check the `dim` keyword. Two dimensional geometries assume spatial extents in x and y.
+- In order for interpolation to work correctly providing the correct dimension (set via `dim` keyword) of the problem is crucial.
 - For some meshes it might help to adjust the number of points taken into account by the triangulation, which can be done using the `nneighbors` keyword. Default value is 20.
-- Especially along boundaries, nearest neighbor interpolation should be preferred. 
+- Especially along boundaries, linear interpolation with the QHULL method often fails, this can be resolved bei using nearest neighbor interpolation.
 
 
 ```julia
