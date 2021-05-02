@@ -6,6 +6,7 @@ from vtk.util.numpy_support import vtk_to_numpy
 from vtk.util.numpy_support import numpy_to_vtk
 from lxml import etree as ET
 from scipy.interpolate import griddata
+from scipy.interpolate import interp1d
 
 
 class VTUIO(object):
@@ -39,7 +40,14 @@ class VTUIO(object):
         field = self.getField(fieldname)
         resp = {}
         for i, (key, val) in enumerate(points_interpol.items()):
-            if self.dim == 2:
+            if self.dim == 1:
+                data = pd.DataFrame(self.points[:,0], columns = ['x'])
+                data["y"] = field
+                data.sort_values(by = ['x'], inplace=True)
+                data.drop_duplicates(subset=['x'], inplace=True)
+                f = interp1d(data['x'],data['y'])
+                resp[key] = f(val[0])
+            elif self.dim == 2:
                 grid_x, grid_y = np.array([[[val[0]]],[[val[1]]]])
                 resp[key] = griddata(self.points[neighbors[i]], field[neighbors[i]], (grid_x, grid_y),
                         method=self.interpolation_method)[0][0]
