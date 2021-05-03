@@ -1,5 +1,18 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=C0103, R0902, R0914
+"""
+VTUinterface is a python package for easy accessing VTU/PVD files as
+outputed by Finite Element software like OpenGeoSys. It uses the VTK python
+wrapper and linear interpolation between time steps and grid points access
+any points in and and time within the simulation domain.
+
+Copyright (c) 2012-2021, OpenGeoSys Community (http://www.opengeosys.org)
+            Distributed under a Modified BSD License.
+              See accompanying file LICENSE.txt or
+              http://www.opengeosys.org/project/license
+
+"""
+
+# pylint: disable=C0103, R0902, R0914, R0913
 import os
 import numpy as np
 import pandas as pd
@@ -11,7 +24,7 @@ from scipy.interpolate import griddata
 from scipy.interpolate import interp1d
 
 
-class VTUIO(object):
+class VTUIO:
     """
     Class for handling I/O of VTU files
     """
@@ -27,21 +40,27 @@ class VTUIO(object):
         self.nneighbors = nneighbors
         self.interpolation_method = interpolation_method
         if self.dim == 2:
-            self.points = np.delete(self.points,2,1)
+            self.points = np.delete(self.points, 2, 1)
 
-    def _getNeighbors(self, points_interpol):
-        numneighbors = self.nneighbors
+    def getNeighbors(self, points_interpol):
+        """
+        Method for obtaining neighbors for interpolation
+        """
         df = pd.DataFrame(self.points)
         neighbors = {}
-        for i, (key, val) in enumerate(points_interpol.items()):
+        for i, (_, val) in enumerate(points_interpol.items()):
             if self.dim == 2:
                 df["r_"+str(i)] = (df[0]-val[0]) * (df[0]-val[0]) + (df[1]-val[1]) * (df[1]-val[1])
             else:
-                df["r_"+str(i)] = (df[0]-val[0]) * (df[0]-val[0]) + (df[1]-val[1]) * (df[1]-val[1]) + (df[2]-val[2])*(df[2]-val[2])
-            neighbors[i] = df.sort_values(by=["r_"+str(i)]).head(numneighbors).index
+                df["r_"+str(i)] = ((df[0]-val[0]) * (df[0]-val[0]) + (df[1]-val[1]) * (df[1]-val[1])
+                        + (df[2]-val[2]) * (df[2]-val[2]))
+            neighbors[i] = df.sort_values(by=["r_" + str(i)]).head(self.nneighbors).index
         return neighbors
 
-    def _getData(self, neighbors, points_interpol, fieldname):
+    def getData(self, neighbors, points_interpol, fieldname):
+        """
+        Get interpolated data for points_interpol using "neighbors" points.
+        """
         field = self.getField(fieldname)
         resp = {}
         for i, (key, val) in enumerate(points_interpol.items()):
@@ -50,16 +69,16 @@ class VTUIO(object):
                 data["y"] = field
                 data.sort_values(by = ['x'], inplace=True)
                 data.drop_duplicates(subset=['x'], inplace=True)
-                f = interp1d(data['x'],data['y'])
+                f = interp1d(data['x'], data['y'])
                 resp[key] = f(val[0])
             elif self.dim == 2:
                 grid_x, grid_y = np.array([[[val[0]]],[[val[1]]]])
-                resp[key] = griddata(self.points[neighbors[i]], field[neighbors[i]], (grid_x, grid_y),
-                        method=self.interpolation_method)[0][0]
+                resp[key] = griddata(self.points[neighbors[i]], field[neighbors[i]],
+                        (grid_x, grid_y), method=self.interpolation_method)[0][0]
             else:
                 grid_x, grid_y, grid_z = np.array([[[[val[0]]]], [[[val[1]]]], [[[val[2]]]]])
-                resp[key] = griddata(self.points[neighbors[i]], field[neighbors[i]], (grid_x, grid_y, grid_z),
-                        method=self.interpolation_method)[0][0][0]
+                resp[key] = griddata(self.points[neighbors[i]], field[neighbors[i]],
+                        (grid_x, grid_y, grid_z), method=self.interpolation_method)[0][0][0]
         return resp
 
     def getField(self, fieldname):
@@ -86,24 +105,24 @@ class VTUIO(object):
             pts = {'pt0': (0.0,0.0,0.0)}
         resp = {}
         for pt in pts:
-            if type(fieldname) is str:
+            if isinstance(fieldname, str):
                 resp[pt] = []
-            elif type(fieldname) is list:
+            elif isinstance(fieldname, list):
                 resp[pt] = {}
                 for field in fieldname:
                     resp[pt][field] = []
-        nb = self._getNeighbors(pts)
-        if type(fieldname) is str:
-            data = self._getData(nb, pts, fieldname)
+        nb = self.getNeighbors(pts)
+        if isinstance(fieldname, str):
+            data = self.getData(nb, pts, fieldname)
             for pt in pts:
                 resp[pt]=data[pt]
-        elif type(fieldname) is list:
+        elif isinstance(fieldname, list):
             data = {}
             for field in fieldname:
-                data[field] = self._getData(nb, pts, field)
+                data[field] = self.getData(nb, pts, field)
             for pt in pts:
                 for field in fieldname:
-                    resp[pt][field]=data[field][pt]
+                    resp[pt][field] = data[field][pt]
         return resp
 
     def getPointSetData(self, fieldname, pointsetarray=None):
@@ -111,7 +130,7 @@ class VTUIO(object):
         Get data specified in fieldname at all points specified in "pointsetarray".
         """
         if pointsetarray is None:
-            pointsetarray =[(0,0,0)]
+            pointsetarray = [(0,0,0)]
         pts = {}
         # convert into point dictionary
         for i, entry in enumerate(pointsetarray):
@@ -120,13 +139,13 @@ class VTUIO(object):
         resp_list = []
         # convert point dictionary into list
         for i, entry in enumerate(pointsetarray):
-            resp_list.append(resp['pt'+str(i)])
+            resp_list.append(resp['pt' + str(i)])
         resp_array = np.array(resp_list)
         return resp_array
 
     def func2Field(self, function, fieldname, ofilename):
         """
-        Add a field to the vtu file (which will be saved directly as "ofilename" 
+        Add a field to the vtu file (which will be saved directly as "ofilename"
         by providing a three argument function(x,y,z)
         """
         if callable(function) is False:
@@ -135,9 +154,9 @@ class VTUIO(object):
         fieldarray = np.zeros(len(self.points))
         for i,_ in enumerate(fieldarray):
             if self.dim == 2:
-                fieldarray[i] = function(self.points[i,0],self.points[i,1],0.0)
+                fieldarray[i] = function(self.points[i,0], self.points[i,1], 0.0)
             else:
-                fieldarray[i] = function(self.points[i,0],self.points[i,1],self.points[i,2])
+                fieldarray[i] = function(self.points[i,0], self.points[i,1], self.points[i,2])
         field_vtk = numpy_to_vtk(fieldarray)
         r = self.pdata.AddArray(field_vtk)
         self.pdata.GetArray(r).SetName(fieldname)
@@ -209,7 +228,7 @@ class VTUIO(object):
 
 
 
-class PVDIO(object):
+class PVDIO:
     """
     Class for handling I/O of PVD files
     """
@@ -220,7 +239,7 @@ class PVDIO(object):
         self.nneighbors = nneighbors
         self.timesteps = np.array([])
         self.vtufilenames = []
-        self.readPVD(os.path.join(folder,filename))
+        self.readPVD(os.path.join(folder, filename))
         self.dim = dim
 
     def readPVD(self, filename):
@@ -245,9 +264,9 @@ class PVDIO(object):
             pts = {'pt0': (0.0,0.0,0.0)}
         resp_t = {}
         for pt in pts:
-            if type(fieldname) is str:
+            if isinstance(fieldname, str):
                 resp_t[pt] = []
-            elif type(fieldname) is list:
+            elif isinstance(fieldname, list):
                 resp_t[pt] = {}
                 for field in fieldname:
                     resp_t[pt][field] = []
@@ -259,23 +278,23 @@ class PVDIO(object):
                     interpolation_method=self.interpolation_method,
                     nneighbors=self.nneighbors, dim=self.dim)
             if i == 0:
-                nb = vtu._getNeighbors(pts)
-            if type(fieldname) is str:
-                data = vtu._getData(nb, pts, fieldname)
+                nb = vtu.getNeighbors(pts)
+            if isinstance(fieldname, str):
+                data = vtu.getData(nb, pts, fieldname)
                 for pt in pts:
                     resp_t[pt].append(data[pt])
-            elif type(fieldname) is list:
+            elif isinstance(fieldname, list):
                 data = {}
                 for field in fieldname:
-                    data[field] = vtu._getData(nb, pts, field)
+                    data[field] = vtu.getData(nb, pts, field)
                 for pt in pts:
                     for field in fieldname:
                         resp_t[pt][field].append(data[field][pt])
         resp_t_array = {}
         for pt, field in resp_t.items():
-            if type(fieldname) is str:
+            if isinstance(fieldname, str):
                 resp_t_array[pt] = np.array(field)
-            elif type(fieldname) is list:
+            elif isinstance(fieldname, list):
                 resp_t_array[pt] = {}
                 for field_, fieldarray in resp_t[pt].items():
                     resp_t_array[pt][field_] = np.array(fieldarray)
