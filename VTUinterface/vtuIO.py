@@ -1,7 +1,9 @@
+# -*- coding: utf-8 -*-
+# pylint: disable=C0103, R0902, R0914
 import os
 import numpy as np
 import pandas as pd
-from vtk import *
+import vtk
 from vtk.util.numpy_support import vtk_to_numpy
 from vtk.util.numpy_support import numpy_to_vtk
 from lxml import etree as ET
@@ -10,9 +12,12 @@ from scipy.interpolate import interp1d
 
 
 class VTUIO(object):
+    """
+    Class for handling I/O of VTU files
+    """
     def __init__(self, filename, interpolation_method="linear", nneighbors=20, dim=3):
         self.filename = filename
-        self.reader = vtkXMLUnstructuredGridReader()
+        self.reader = vtk.vtkXMLUnstructuredGridReader()
         self.reader.SetFileName(self.filename)
         self.reader.Update()
         self.output = self.reader.GetOutput()
@@ -24,8 +29,8 @@ class VTUIO(object):
         if self.dim == 2:
             self.points = np.delete(self.points,2,1)
 
-    def getNeighbors(self, points_interpol):
-        numneighbors=self.nneighbors
+    def _getNeighbors(self, points_interpol):
+        numneighbors = self.nneighbors
         df = pd.DataFrame(self.points)
         neighbors = {}
         for i, (key, val) in enumerate(points_interpol.items()):
@@ -36,7 +41,7 @@ class VTUIO(object):
             neighbors[i] = df.sort_values(by=["r_"+str(i)]).head(numneighbors).index
         return neighbors
 
-    def getData(self, neighbors, points_interpol, fieldname):
+    def _getData(self, neighbors, points_interpol, fieldname):
         field = self.getField(fieldname)
         resp = {}
         for i, (key, val) in enumerate(points_interpol.items()):
@@ -58,16 +63,25 @@ class VTUIO(object):
         return resp
 
     def getField(self, fieldname):
+        """
+        Return vtu point field as numpy array.
+        """
         field = vtk_to_numpy(self.pdata.GetArray(fieldname))
         return field
 
     def getFieldnames(self):
+        """
+        Get names of all point fields in the vtu file.
+        """
         fieldnames = []
         for i in range(self.pdata.GetNumberOfArrays()):
             fieldnames.append(self.pdata.GetArrayName(i))
         return fieldnames
 
     def getPointData(self, fieldname, pts = None):
+        """
+        Get data of field "fieldname" at all points specified in "pts".
+        """
         if pts is None:
             pts = {'pt0': (0.0,0.0,0.0)}
         resp = {}
@@ -78,21 +92,24 @@ class VTUIO(object):
                 resp[pt] = {}
                 for field in fieldname:
                     resp[pt][field] = []
-        nb = self.getNeighbors(pts)
+        nb = self._getNeighbors(pts)
         if type(fieldname) is str:
-            data = self.getData(nb, pts, fieldname)
+            data = self._getData(nb, pts, fieldname)
             for pt in pts:
                 resp[pt]=data[pt]
         elif type(fieldname) is list:
             data = {}
             for field in fieldname:
-                data[field] = self.getData(nb, pts, field)
+                data[field] = self._getData(nb, pts, field)
             for pt in pts:
                 for field in fieldname:
                     resp[pt][field]=data[field][pt]
         return resp
 
     def getPointSetData(self, fieldname, pointsetarray=None):
+        """
+        Get data specified in fieldname at all points specified in "pointsetarray".
+        """
         if pointsetarray is None:
             pointsetarray =[(0,0,0)]
         pts = {}
@@ -107,10 +124,11 @@ class VTUIO(object):
         resp_array = np.array(resp_list)
         return resp_array
 
-    """
-    " function should carry 3 arguments for x,y and z
-    """
     def func2Field(self, function, fieldname, ofilename):
+        """
+        Add a field to the vtu file (which will be saved directly as "ofilename" 
+        by providing a three argument function(x,y,z)
+        """
         if callable(function) is False:
             print("function is not a function")
             raise TypeError
@@ -123,15 +141,16 @@ class VTUIO(object):
         field_vtk = numpy_to_vtk(fieldarray)
         r = self.pdata.AddArray(field_vtk)
         self.pdata.GetArray(r).SetName(fieldname)
-        writer = vtkXMLUnstructuredGridWriter()
+        writer = vtk.vtkXMLUnstructuredGridWriter()
         writer.SetFileName(ofilename)
         writer.SetInputData(self.output)
         writer.Write()
 
-    """
-    " multidimensional version of func2Field
-    """
     def func2mdimField(self, functionarray, fieldname, ofilename):
+        """
+        Add a multidimensional field to the vtu file (which will be saved directly as "ofilename"
+        by providing am array of three argument functions.
+        """
         mdim = len(functionarray)
         for function in functionarray:
             if callable(function) is False:
@@ -153,13 +172,16 @@ class VTUIO(object):
         field_vtk = numpy_to_vtk(fieldarray)
         r = self.pdata.AddArray(field_vtk)
         self.pdata.GetArray(r).SetName(fieldname)
-        writer = vtkXMLUnstructuredGridWriter()
+        writer = vtk.vtkXMLUnstructuredGridWriter()
         writer.SetFileName(ofilename)
         writer.SetInputData(self.output)
         writer.Write()
 
     def pointdata2celldata(self, fieldname, ofilename):
-        p2c = vtkPointDataToCellData()
+        """
+        convert pointdata to cell data of field "fieldname"
+        """
+        p2c = vtk.vtkPointDataToCellData()
         p2c.SetInputData(self.output)
         p2c.Update()
         outcells = p2c.GetOutput()
@@ -167,16 +189,20 @@ class VTUIO(object):
         array =  cells.GetArray(fieldname)
         cells_orig = self.output.GetCellData()
         cells_orig.AddArray(array)
-        writer = vtkXMLUnstructuredGridWriter()
+        writer = vtk.vtkXMLUnstructuredGridWriter()
         writer.SetFileName(ofilename)
         writer.SetInputData(self.output)
         writer.Write()
 
     def writeField(self, field, fieldname, ofilename):
+        """
+        Write a field (numpy array of correct size)
+        to field "fieldname" as file "ofilename".
+        """
         field_vtk = numpy_to_vtk(field)
         r = self.pdata.AddArray(field_vtk)
         self.pdata.GetArray(r).SetName(fieldname)
-        writer = vtkXMLUnstructuredGridWriter()
+        writer = vtk.vtkXMLUnstructuredGridWriter()
         writer.SetFileName(ofilename)
         writer.SetInputData(self.output)
         writer.Write()
@@ -184,6 +210,9 @@ class VTUIO(object):
 
 
 class PVDIO(object):
+    """
+    Class for handling I/O of PVD files
+    """
     def __init__(self, folder, filename, interpolation_method="linear", nneighbors=20, dim=3):
         self.folder = folder
         self.filename = ""
@@ -194,7 +223,10 @@ class PVDIO(object):
         self.readPVD(os.path.join(folder,filename))
         self.dim = dim
 
-    def readPVD(self,filename):
+    def readPVD(self, filename):
+        """
+        Read in PVD file
+        """
         print(filename)
         self.filename = filename
         tree = ET.parse(self.filename)
@@ -204,7 +236,11 @@ class PVDIO(object):
                 self.timesteps = np.append(self.timesteps, [float(dataset.attrib['timestep'])])
                 self.vtufilenames.append(dataset.attrib['file'])
 
-    def readTimeSeries(self,fieldname, pts=None):
+    def readTimeSeries(self, fieldname, pts=None):
+        """
+        Return time series data of field "fieldname" at points pts.
+        Also a list of fieldnames can be provided as "fieldname"
+        """
         if pts is None:
             pts = {'pt0': (0.0,0.0,0.0)}
         resp_t = {}
@@ -223,15 +259,15 @@ class PVDIO(object):
                     interpolation_method=self.interpolation_method,
                     nneighbors=self.nneighbors, dim=self.dim)
             if i == 0:
-                nb = vtu.getNeighbors(pts)
+                nb = vtu._getNeighbors(pts)
             if type(fieldname) is str:
-                data = vtu.getData(nb, pts, fieldname)
+                data = vtu._getData(nb, pts, fieldname)
                 for pt in pts:
                     resp_t[pt].append(data[pt])
             elif type(fieldname) is list:
                 data = {}
                 for field in fieldname:
-                    data[field] = vtu.getData(nb, pts, field)
+                    data[field] = vtu._getData(nb, pts, field)
                 for pt in pts:
                     for field in fieldname:
                         resp_t[pt][field].append(data[field][pt])
@@ -246,6 +282,9 @@ class PVDIO(object):
         return resp_t_array
 
     def readTimeStep(self, timestep, fieldname):
+        """
+        Print field "fieldname" at time "timestep".
+        """
         filename = None
         for i, ts in enumerate(self.timesteps):
             if timestep == ts:
@@ -285,8 +324,11 @@ class PVDIO(object):
         return field
 
     def readPointSetData(self, timestep, fieldname, pointsetarray = None):
+        """
+        Get data of field "fieldname" at time "timestep" alon a given "pointsetarray".
+        """
         if pointsetarray is None:
-            pointsetarray =[(0,0,0)]
+            pointsetarray = [(0,0,0)]
         filename = None
         for i, ts in enumerate(self.timesteps):
             if timestep == ts:
@@ -326,6 +368,9 @@ class PVDIO(object):
         return field
 
     def clearPVDrelpath(self):
+        """
+        Delete relative directory paths in the vtu filenames of the PVD file.
+        """
         xpath="./Collection/DataSet"
         tree = ET.parse(self.filename)
         root = tree.getroot()
@@ -343,4 +388,3 @@ class PVDIO(object):
         for entry in  self.vtufilenames:
             newlist.append(entry.split("/")[-1])
         self.vtufilenames = newlist
-
