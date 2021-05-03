@@ -7,7 +7,7 @@ any points in and and time within the simulation domain.
 
 Copyright (c) 2012-2021, OpenGeoSys Community (http://www.opengeosys.org)
             Distributed under a Modified BSD License.
-              See accompanying file LICENSE.txt or
+              See accompanying file LICENSE or
               http://www.opengeosys.org/project/license
 
 """
