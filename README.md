@@ -4,21 +4,9 @@
 # VTUinterface 
 
 VTUinterface is a python package for easy accessing VTU/PVD files as outputed by Finite Element software like OpenGeoSys. It uses the VTK python wrapper and linear interpolation between time steps and grid points access any points in and and time within the simulation domain.
-While beeing a python package, it was also tested in Julia, where it can be accessed via PyCall:
 
+[Documentation reference](https://joergbuchwald.github.io/VTUinterface-doc)
 
-```julia
-ENV["PYTHON"] = "/usr/bin/python3"
-using Pkg
-#Pkg.add("PyCall")
-Pkg.build("PyCall")
-```
-
-
-```julia
-using PyCall
-@pyimport vtuIO
-```
 
 VTUinterface together with ogs6py can be viewed in action here:
 
@@ -37,6 +25,22 @@ clone the repository and use pip to install the package
 Single VTU files can be accessed via:
 
 # 1. reading a single VTU file
+
+While beeing a python package, it was also tested in Julia, where it can be accessed via PyCall:
+
+
+```julia
+ENV["PYTHON"] = "/usr/bin/python3"
+using Pkg
+#Pkg.add("PyCall")
+Pkg.build("PyCall")
+```
+
+
+```julia
+using PyCall
+@pyimport vtuIO
+```
 
 
 ```julia
