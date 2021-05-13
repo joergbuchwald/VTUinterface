@@ -27,6 +27,14 @@ from scipy.interpolate import interp1d
 class VTUIO:
     """
     Class for handling I/O of VTU files
+
+    Parameters
+    ----------
+    filename : `str`
+    nneighbors : `int`, optional
+                 default: 20
+    dim : `int`, optional
+          default: 3
     """
     def __init__(self, filename, nneighbors=20, dim=3):
         self.filename = filename
@@ -83,6 +91,7 @@ class VTUIO:
     def getField(self, fieldname):
         """
         Return vtu point field as numpy array.
+        fieldname : `str`
         """
         field = vtk_to_numpy(self.pdata.GetArray(fieldname))
         return field
@@ -99,6 +108,14 @@ class VTUIO:
     def getPointData(self, fieldname, pts = None, interpolation_method="linear"):
         """
         Get data of field "fieldname" at all points specified in "pts".
+
+        Parameters
+        ----------
+        fieldname : `str`
+        pts : `dict`, optional
+              default: {'pt0': (0.0,0.0,0.0)}
+        interpolation_method : `str`, optional
+                               default: 'linear'
         """
         if pts is None:
             pts = {'pt0': (0.0,0.0,0.0)}
@@ -127,6 +144,14 @@ class VTUIO:
     def getPointSetData(self, fieldname, pointsetarray=None, interpolation_method="linear"):
         """
         Get data specified in fieldname at all points specified in "pointsetarray".
+
+        Parameters
+        ----------
+        fieldname : `str`
+        pointsetarray : `list`, optional
+                        default: [(0,0,0)]
+        interpolation_method : `str`, optional
+                               default: 'linear'
         """
         if pointsetarray is None:
             pointsetarray = [(0,0,0)]
@@ -146,6 +171,12 @@ class VTUIO:
         """
         Add a field to the vtu file (which will be saved directly as "ofilename"
         by providing a three argument function(x,y,z)
+
+        Parameters
+        ----------
+        function : `function`
+        fieldname : `str`
+        ofilename : `str`
         """
         if callable(function) is False:
             print("function is not a function")
@@ -168,6 +199,12 @@ class VTUIO:
         """
         Add a multidimensional field to the vtu file (which will be saved directly as "ofilename"
         by providing am array of three argument functions.
+
+        Parameters
+        ----------
+        functionarray : `array` of objects
+        fieldname : `str`
+        ofilename : `str`
         """
         mdim = len(functionarray)
         for function in functionarray:
@@ -198,6 +235,11 @@ class VTUIO:
     def pointData2CellData(self, fieldname, ofilename):
         """
         convert pointdata to cell data of field "fieldname"
+
+        Parameters
+        ----------
+        fieldname : `str`
+        ofilename : `str`
         """
         p2c = vtk.vtkPointDataToCellData()
         p2c.SetInputData(self.output)
@@ -216,6 +258,12 @@ class VTUIO:
         """
         Write a field (numpy array of correct size)
         to field "fieldname" as file "ofilename".
+
+        Parameters
+        ----------
+        field : `array`
+        fieldname : `str`
+        ofilename : `str`
         """
         field_vtk = numpy_to_vtk(field)
         r = self.pdata.AddArray(field_vtk)
@@ -230,6 +278,13 @@ class VTUIO:
 class PVDIO:
     """
     Class for handling I/O of PVD files
+
+    Parameters
+    ----------
+    folder : `str`
+    filename : `str`
+    nneighbors : `int`, optional
+    dim : `int`
     """
     def __init__(self, folder, filename, nneighbors=20, dim=3):
         self.folder = folder
@@ -243,6 +298,10 @@ class PVDIO:
     def readPVD(self, filename):
         """
         Read in PVD file
+
+        Parameters
+        ----------
+        filename : `str`
         """
         print(filename)
         self.filename = filename
@@ -257,6 +316,14 @@ class PVDIO:
         """
         Return time series data of field "fieldname" at points pts.
         Also a list of fieldnames can be provided as "fieldname"
+
+        Parameters
+        ----------
+        fieldname : `str`
+        pts : `dict`, optional
+              default: {'pt0': (0.0,0.0,0.0)}
+        interpolation_method : `str`, optional
+                               default: 'linear
         """
         if pts is None:
             pts = {'pt0': (0.0,0.0,0.0)}
@@ -300,6 +367,11 @@ class PVDIO:
     def readTimeStep(self, timestep, fieldname):
         """
         Print field "fieldname" at time "timestep".
+
+        Parameters
+        ----------
+        timestep : `int`
+        fieldname : `str`
         """
         filename = None
         for i, ts in enumerate(self.timesteps):
@@ -339,6 +411,15 @@ class PVDIO:
     def readPointSetData(self, timestep, fieldname, pointsetarray = None, interpolation_method="linear"):
         """
         Get data of field "fieldname" at time "timestep" alon a given "pointsetarray".
+
+        Parameters
+        ----------
+        timestep : `int`
+        fieldname : `str`
+        pointsetarray : `array`, optional
+                        default: [(0,0,0)]
+        interpolation_method : `str`
+                               default: 'linear'
         """
         if pointsetarray is None:
             pointsetarray = [(0,0,0)]
