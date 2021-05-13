@@ -30,5 +30,5 @@ def fct2(x,y,z):
     return 0
 
 # result is a four-dimensional point field
-data.func2mdimField([fct,fct,fct2,fct2], "sigma0","sigma0_field.vtu")
+data.func2MdimField([fct,fct,fct2,fct2], "sigma0","sigma0_field.vtu")
 

@@ -87,7 +87,7 @@ class VTUIO:
         field = vtk_to_numpy(self.pdata.GetArray(fieldname))
         return field
 
-    def getFieldnames(self):
+    def getFieldNames(self):
         """
         Get names of all point fields in the vtu file.
         """
@@ -377,7 +377,7 @@ class PVDIO:
                 field = field1 + fieldslope * (timestep-timestep1)
         return field
 
-    def clearPVDrelpath(self):
+    def clearPVDRelPath(self):
         """
         Delete relative directory paths in the vtu filenames of the PVD file.
         """
