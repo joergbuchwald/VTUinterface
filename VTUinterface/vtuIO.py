@@ -167,7 +167,7 @@ class VTUIO:
         resp_array = np.array(resp_list)
         return resp_array
 
-    def func2Field(self, function, fieldname, ofilename):
+    def func2Field(self, function, fieldname, ofilename, cell=False):
         """
         Add a field to the vtu file (which will be saved directly as "ofilename"
         by providing a three argument function(x,y,z)
@@ -177,6 +177,7 @@ class VTUIO:
         function : `function`
         fieldname : `str`
         ofilename : `str`
+        cell : `bool`
         """
         if callable(function) is False:
             print("function is not a function")
@@ -190,12 +191,22 @@ class VTUIO:
         field_vtk = numpy_to_vtk(fieldarray)
         r = self.pdata.AddArray(field_vtk)
         self.pdata.GetArray(r).SetName(fieldname)
+        if cell is True:
+            p2c = vtk.vtkPointDataToCellData()
+            p2c.SetInputData(self.output)
+            p2c.Update()
+            outcells = p2c.GetOutput()
+            cells = outcells.GetCellData()
+            array =  cells.GetArray(fieldname)
+            cells_orig = self.output.GetCellData()
+            cells_orig.AddArray(array)
+            self.pdata.RemoveArray(fieldname)
         writer = vtk.vtkXMLUnstructuredGridWriter()
         writer.SetFileName(ofilename)
         writer.SetInputData(self.output)
         writer.Write()
 
-    def func2MdimField(self, functionarray, fieldname, ofilename):
+    def func2MdimField(self, functionarray, fieldname, ofilename, cell=False):
         """
         Add a multidimensional field to the vtu file (which will be saved directly as "ofilename"
         by providing am array of three argument functions.
@@ -227,6 +238,16 @@ class VTUIO:
         field_vtk = numpy_to_vtk(fieldarray)
         r = self.pdata.AddArray(field_vtk)
         self.pdata.GetArray(r).SetName(fieldname)
+        if cell is True:
+            p2c = vtk.vtkPointDataToCellData()
+            p2c.SetInputData(self.output)
+            p2c.Update()
+            outcells = p2c.GetOutput()
+            cells = outcells.GetCellData()
+            array =  cells.GetArray(fieldname)
+            cells_orig = self.output.GetCellData()
+            cells_orig.AddArray(array)
+            self.pdata.RemoveArray(fieldname)
         writer = vtk.vtkXMLUnstructuredGridWriter()
         writer.SetFileName(ofilename)
         writer.SetInputData(self.output)
