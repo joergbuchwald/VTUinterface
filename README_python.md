@@ -17,7 +17,7 @@ Basic VTU properties, like fieldnames, points and corresponding fielddata as pro
 
 
 ```python
-vtufile.getFieldnames()
+vtufile.get_field_names()
 ```
 
 
@@ -45,7 +45,7 @@ vtufile.points[0:3]
 
 
 ```python
-vtufile.getField("v")[0:3]
+vtufile.get_field("v")[0:3]
 ```
 
 
@@ -64,14 +64,11 @@ Aside basic VTU properties, the field data at any given point, e.g,
 points={'pt0': (0.5,0.5,0.0), 'pt1': (0.2,0.2,0.0)} 
 ```
 
-
-```python
 can be retrieved via
-```
 
 
 ```python
-vtufile.getPointData("pressure", pts=points)
+vtufile.get_point_data("pressure", pts=points)
 ```
 
 
@@ -96,7 +93,7 @@ vtufile = vtuIO.VTUIO("examples/square2d_random.vtu", dim=2)
 
 
 ```python
-field = vtufile.getField("gaussian_field_2");
+field = vtufile.get_field("gaussian_field_2");
 ```
 
 
@@ -112,7 +109,7 @@ plt.tricontourf(triang,field)
 
 
 
-    <matplotlib.tri.tricontour.TriContourSet at 0x7fc9e6cc5850>
+    <matplotlib.tri.tricontour.TriContourSet at 0x7f84fa66b670>
 
 
 
@@ -135,14 +132,6 @@ methods = ["nearest", "linear", "cubic"]
 
 
 ```python
-vtufile = vtuIO.VTUIO("examples/square2d_random.vtu", dim=2)
-data_diag = {}
-for method in methods:
-    data_diag[method] = vtufile.getPointSetData("gaussian_field_2", pointsetarray=diagonal, interpolation_method=method)
-```
-
-
-```python
 import numpy as np
 x = np.linspace(0.0,64,num=100);
 ```
@@ -150,6 +139,14 @@ x = np.linspace(0.0,64,num=100);
 
 ```python
 diagonal = [(i,i,0) for i in x];
+```
+
+
+```python
+vtufile = vtuIO.VTUIO("examples/square2d_random.vtu", dim=2)
+data_diag = {}
+for method in methods:
+    data_diag[method] = vtufile.get_point_set_data("gaussian_field_2", pointsetarray=diagonal, interpolation_method=method)
 ```
 
 
@@ -167,7 +164,7 @@ plt.legend()
 
 
 
-    <matplotlib.legend.Legend at 0x7fc9dd0106a0>
+    <matplotlib.legend.Legend at 0x7f84fa629220>
 
 
 
@@ -187,7 +184,7 @@ vtufile = vtuIO.VTUIO("examples/square_1e2_pcs_0_ts_1_t_1.000000.vtu", dim=2)
 
 
 ```python
-p_size = len(vtufile.getField("pressure"))
+p_size = len(vtufile.get_field("pressure"))
 ```
 
 
@@ -197,7 +194,7 @@ p0 = np.ones(p_size) * 1e6
 
 
 ```python
-vtufile.writeField(p0, "initialPressure", "mesh_initialpressure.vtu")
+vtufile.write_field(p0, "initialPressure", "mesh_initialpressure.vtu")
 ```
 
 
@@ -211,7 +208,7 @@ def p_init(x,y,z):
 
 
 ```python
-vtufile.func2Field(p_init, "p_init", "mesh_initialpressure.vtu")
+vtufile.func_to_field(p_init, "p_init", "mesh_initialpressure.vtu")
 ```
 
 
@@ -222,7 +219,7 @@ def null(x,y,z):
 
 
 ```python
-vtufile.func2MdimField([p_init,p_init,null,null], "sigma00","mesh_initialpressure.vtu")
+vtufile.func_to_m_dim_field([p_init,p_init,null,null], "sigma00","mesh_initialpressure.vtu")
 ```
 
 # 3. Reading time-series data from PVD files:
@@ -249,12 +246,12 @@ points={'pt0': (0.3,0.5,0.0), 'pt1': (0.24,0.21,0.0)}
 
 
 ```python
-pressure_linear = pvdfile.readTimeSeries("pressure", points)
+pressure_linear = pvdfile.read_time_series("pressure", points)
 ```
 
 
 ```python
-pressure_nearest = pvdfile.readTimeSeries("pressure", points, interpolation_method="nearest")
+pressure_nearest = pvdfile.read_time_series("pressure", points, interpolation_method="nearest")
 ```
 
 As point pt0 is a node in the mesh, both values at $t=1$ agree, whereas pt1 is not a mesh node point resulting in different values.
@@ -307,10 +304,10 @@ t2 = 0.9
 
 
 ```python
-pressure_xaxis_t1 = pvdfile.readPointSetData(t1, "pressure", pointsetarray=xaxis)
-pressure_diagonal_t1 = pvdfile.readPointSetData(t1, "pressure", pointsetarray=diagonal)
-pressure_xaxis_t2 = pvdfile.readPointSetData(t2, "pressure", pointsetarray=xaxis)
-pressure_diagonal_t2 = pvdfile.readPointSetData(t2, "pressure", pointsetarray=diagonal)
+pressure_xaxis_t1 = pvdfile.read_point_set_data(t1, "pressure", pointsetarray=xaxis)
+pressure_diagonal_t1 = pvdfile.read_point_set_data(t1, "pressure", pointsetarray=diagonal)
+pressure_xaxis_t2 = pvdfile.read_point_set_data(t2, "pressure", pointsetarray=xaxis)
+pressure_diagonal_t2 = pvdfile.read_point_set_data(t2, "pressure", pointsetarray=diagonal)
 ```
 
 
@@ -327,7 +324,7 @@ plt.legend()
 
 
 
-    <matplotlib.legend.Legend at 0x7fc9dc7fadc0>
+    <matplotlib.legend.Legend at 0x7f84fa491c10>
 
 
 

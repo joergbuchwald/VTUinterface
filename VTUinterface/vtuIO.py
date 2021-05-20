@@ -49,7 +49,7 @@ class VTUIO:
         if self.dim == 2:
             self.points = np.delete(self.points, 2, 1)
 
-    def getNeighbors(self, points_interpol):
+    def get_neighbors(self, points_interpol):
         """
         Method for obtaining neighbor points for interpolation.
         """
@@ -64,11 +64,11 @@ class VTUIO:
             neighbors[i] = df.sort_values(by=["r_" + str(i)]).head(self.nneighbors).index
         return neighbors
 
-    def getData(self, neighbors, points_interpol, fieldname, interpolation_method="linear"):
+    def get_data(self, neighbors, points_interpol, fieldname, interpolation_method="linear"):
         """
         Get interpolated data for points_interpol using neighbor points.
         """
-        field = self.getField(fieldname)
+        field = self.get_field(fieldname)
         resp = {}
         for i, (key, val) in enumerate(points_interpol.items()):
             if self.dim == 1:
@@ -88,7 +88,7 @@ class VTUIO:
                         (grid_x, grid_y, grid_z), method=interpolation_method)[0][0][0]
         return resp
 
-    def getField(self, fieldname):
+    def get_field(self, fieldname):
         """
         Return vtu point field as numpy array.
         fieldname : `str`
@@ -96,7 +96,7 @@ class VTUIO:
         field = vtk_to_numpy(self.pdata.GetArray(fieldname))
         return field
 
-    def getFieldNames(self):
+    def get_field_names(self):
         """
         Get names of all point fields in the vtu file.
         """
@@ -105,7 +105,7 @@ class VTUIO:
             fieldnames.append(self.pdata.GetArrayName(i))
         return fieldnames
 
-    def getPointData(self, fieldname, pts = None, interpolation_method="linear"):
+    def get_point_data(self, fieldname, pts = None, interpolation_method="linear"):
         """
         Get data of field "fieldname" at all points specified in "pts".
 
@@ -127,21 +127,21 @@ class VTUIO:
                 resp[pt] = {}
                 for field in fieldname:
                     resp[pt][field] = []
-        nb = self.getNeighbors(pts)
+        nb = self.get_neighbors(pts)
         if isinstance(fieldname, str):
-            data = self.getData(nb, pts, fieldname, interpolation_method=interpolation_method)
+            data = self.get_data(nb, pts, fieldname, interpolation_method=interpolation_method)
             for pt in pts:
                 resp[pt]=data[pt]
         elif isinstance(fieldname, list):
             data = {}
             for field in fieldname:
-                data[field] = self.getData(nb, pts, field, interpolation_method=interpolation_method)
+                data[field] = self.get_data(nb, pts, field, interpolation_method=interpolation_method)
             for pt in pts:
                 for field in fieldname:
                     resp[pt][field] = data[field][pt]
         return resp
 
-    def getPointSetData(self, fieldname, pointsetarray=None, interpolation_method="linear"):
+    def get_point_set_data(self, fieldname, pointsetarray=None, interpolation_method="linear"):
         """
         Get data specified in fieldname at all points specified in "pointsetarray".
 
@@ -159,7 +159,7 @@ class VTUIO:
         # convert into point dictionary
         for i, entry in enumerate(pointsetarray):
             pts['pt'+str(i)] = entry
-        resp = self.getPointData(fieldname, pts=pts, interpolation_method=interpolation_method)
+        resp = self.get_point_data(fieldname, pts=pts, interpolation_method=interpolation_method)
         resp_list = []
         # convert point dictionary into list
         for i, entry in enumerate(pointsetarray):
@@ -167,7 +167,7 @@ class VTUIO:
         resp_array = np.array(resp_list)
         return resp_array
 
-    def func2Field(self, function, fieldname, ofilename, cell=False):
+    def func_to_field(self, function, fieldname, ofilename, cell=False):
         """
         Add a field to the vtu file (which will be saved directly as "ofilename"
         by providing a three argument function(x,y,z)
@@ -206,7 +206,7 @@ class VTUIO:
         writer.SetInputData(self.output)
         writer.Write()
 
-    def func2MdimField(self, functionarray, fieldname, ofilename, cell=False):
+    def func_to_m_dim_field(self, functionarray, fieldname, ofilename, cell=False):
         """
         Add a multidimensional field to the vtu file (which will be saved directly as "ofilename"
         by providing am array of three argument functions.
@@ -253,7 +253,7 @@ class VTUIO:
         writer.SetInputData(self.output)
         writer.Write()
 
-    def pointData2CellData(self, fieldname, ofilename):
+    def point_data_to_cell_data(self, fieldname, ofilename):
         """
         convert pointdata to cell data of field "fieldname"
 
@@ -275,7 +275,7 @@ class VTUIO:
         writer.SetInputData(self.output)
         writer.Write()
 
-    def writeField(self, field, fieldname, ofilename):
+    def write_field(self, field, fieldname, ofilename):
         """
         Write a field (numpy array of correct size)
         to field "fieldname" as file "ofilename".
@@ -313,10 +313,10 @@ class PVDIO:
         self.nneighbors = nneighbors
         self.timesteps = np.array([])
         self.vtufilenames = []
-        self.readPVD(os.path.join(folder, filename))
+        self.read_pvd(os.path.join(folder, filename))
         self.dim = dim
 
-    def readPVD(self, filename):
+    def read_pvd(self, filename):
         """
         Read in PVD file
 
@@ -333,7 +333,7 @@ class PVDIO:
                 self.timesteps = np.append(self.timesteps, [float(dataset.attrib['timestep'])])
                 self.vtufilenames.append(dataset.attrib['file'])
 
-    def readTimeSeries(self, fieldname, pts=None, interpolation_method="linear"):
+    def read_time_series(self, fieldname, pts=None, interpolation_method="linear"):
         """
         Return time series data of field "fieldname" at points pts.
         Also a list of fieldnames can be provided as "fieldname"
@@ -363,15 +363,15 @@ class PVDIO:
             vtu = VTUIO(os.path.join(self.folder,fn_new),
                     nneighbors=self.nneighbors, dim=self.dim)
             if i == 0:
-                nb = vtu.getNeighbors(pts)
+                nb = vtu.get_neighbors(pts)
             if isinstance(fieldname, str):
-                data = vtu.getData(nb, pts, fieldname, interpolation_method=interpolation_method)
+                data = vtu.get_data(nb, pts, fieldname, interpolation_method=interpolation_method)
                 for pt in pts:
                     resp_t[pt].append(data[pt])
             elif isinstance(fieldname, list):
                 data = {}
                 for field in fieldname:
-                    data[field] = vtu.getData(nb, pts, field, interpolation_method=interpolation_method)
+                    data[field] = vtu.get_data(nb, pts, field, interpolation_method=interpolation_method)
                 for pt in pts:
                     for field in fieldname:
                         resp_t[pt][field].append(data[field][pt])
@@ -385,7 +385,7 @@ class PVDIO:
                     resp_t_array[pt][field_] = np.array(fieldarray)
         return resp_t_array
 
-    def readTimeStep(self, timestep, fieldname):
+    def read_time_step(self, timestep, fieldname):
         """
         Print field "fieldname" at time "timestep".
 
@@ -401,7 +401,7 @@ class PVDIO:
         if not filename is None:
             vtu = VTUIO(os.path.join(self.folder,filename),
                     nneighbors=self.nneighbors, dim=self.dim)
-            field = vtu.getField(fieldname)
+            field = vtu.get_field(fieldname)
         else:
             filename1 = None
             filename2 = None
@@ -423,13 +423,13 @@ class PVDIO:
                         nneighbors=self.nneighbors, dim=self.dim)
                 vtu2 = VTUIO(os.path.join(self.folder,filename2),
                         nneighbors=self.nneighbors, dim=self.dim)
-                field1 = vtu1.getField(fieldname)
-                field2 = vtu2.getField(fieldname)
+                field1 = vtu1.get_field(fieldname)
+                field2 = vtu2.get_field(fieldname)
                 fieldslope = (field2-field1)/(timestep2-timestep1)
                 field = field1 + fieldslope * (timestep-timestep1)
         return field
 
-    def readPointSetData(self, timestep, fieldname, pointsetarray = None, interpolation_method="linear"):
+    def read_point_set_data(self, timestep, fieldname, pointsetarray = None, interpolation_method="linear"):
         """
         Get data of field "fieldname" at time "timestep" alon a given "pointsetarray".
 
@@ -451,7 +451,7 @@ class PVDIO:
         if not filename is None:
             vtu = VTUIO(os.path.join(self.folder,filename),
                     nneighbors=self.nneighbors, dim=self.dim)
-            field = vtu.getPointSetData(fieldname, pointsetarray, interpolation_method=interpolation_method)
+            field = vtu.get_point_set_data(fieldname, pointsetarray, interpolation_method=interpolation_method)
         else:
             filename1 = None
             filename2 = None
@@ -473,13 +473,13 @@ class PVDIO:
                     nneighbors=self.nneighbors, dim=self.dim)
                 vtu2 = VTUIO(os.path.join(self.folder,filename2),
                     nneighbors=self.nneighbors, dim=self.dim)
-                field1 = vtu1.getPointSetData(fieldname, pointsetarray, interpolation_method=interpolation_method)
-                field2 = vtu2.getPointSetData(fieldname, pointsetarray, interpolation_method=interpolation_method)
+                field1 = vtu1.get_point_set_data(fieldname, pointsetarray, interpolation_method=interpolation_method)
+                field2 = vtu2.get_point_set_data(fieldname, pointsetarray, interpolation_method=interpolation_method)
                 fieldslope = (field2-field1)/(timestep2-timestep1)
                 field = field1 + fieldslope * (timestep-timestep1)
         return field
 
-    def clearPVDRelPath(self):
+    def clear_pvd_rel_path(self):
         """
         Delete relative directory paths in the vtu filenames of the PVD file.
         """

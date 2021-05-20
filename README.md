@@ -24,6 +24,8 @@ clone the repository and use pip to install the package
 
 # 1. Quick start
 
+## CAUTION: naming style of methods has changed (2021-05-20)
+
 [Basic Usage (python)](https://github.com/joergbuchwald/VTUinterface/blob/master/README_python.md)
 
 Although, a python package, VTUinterface is tested to work through PyCall under julia as well:

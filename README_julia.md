@@ -27,7 +27,7 @@ vtufile = vtuIO.VTUIO("examples/square_1e2_pcs_0_ts_1_t_1.000000.vtu", dim=2)
 
 
 
-    PyObject <vtuIO.VTUIO object at 0x7f389fd3a760>
+    PyObject <vtuIO.VTUIO object at 0x7fe66e250760>
 
 
 
@@ -36,7 +36,7 @@ Basic VTU properties, like fieldnames, points and corresponding fielddata as pro
 
 
 ```julia
-fields=vtufile.getFieldnames()
+fields=vtufile.get_field_names()
 ```
 
 
@@ -67,7 +67,7 @@ vtufile.points[1:3]
 
 
 ```julia
-vtufile.getField("v")
+vtufile.get_field("v")
 ```
 
 
@@ -123,7 +123,7 @@ can be retrieved via
 
 
 ```julia
-point_data = vtufile.getPointData("pressure", pts=points)
+point_data = vtufile.get_point_data("pressure", pts=points)
 ```
 
 
@@ -150,13 +150,13 @@ vtufile = vtuIO.VTUIO("examples/square2d_random.vtu", dim=2)
 
 
 
-    PyObject <vtuIO.VTUIO object at 0x7f3848298fd0>
+    PyObject <vtuIO.VTUIO object at 0x7fe65b8f20d0>
 
 
 
 
 ```julia
-field = vtufile.getField("gaussian_field_2");
+field = vtufile.get_field("gaussian_field_2");
 ```
 
 
@@ -167,7 +167,7 @@ triang = matplotlib.tri.Triangulation(vtufile.points[:,1], vtufile.points[:,2])
 
 
 
-    PyObject <matplotlib.tri.triangulation.Triangulation object at 0x7f3848298850>
+    PyObject <matplotlib.tri.triangulation.Triangulation object at 0x7fe61648f370>
 
 
 
@@ -185,7 +185,7 @@ tricontourf(triang,field)
 
 
 
-    PyObject <matplotlib.tri.tricontour.TriContourSet object at 0x7f389ed33460>
+    PyObject <matplotlib.tri.tricontour.TriContourSet object at 0x7fe6142ed640>
 
 
 
@@ -210,7 +210,7 @@ diagonal = [(i,i,0) for i in 0:0.1:64];
 vtufile = vtuIO.VTUIO("examples/square2d_random.vtu", dim=2)
 data_diag = Dict()
 for method in methods
-    data_diag[method] = vtufile.getPointSetData("gaussian_field_2", pointsetarray=diagonal, interpolation_method=method)
+    data_diag[method] = vtufile.get_point_set_data("gaussian_field_2", pointsetarray=diagonal, interpolation_method=method)
 end
 ```
 
@@ -236,7 +236,7 @@ legend()
 
 
 
-    PyObject <matplotlib.legend.Legend object at 0x7f389ffe8a90>
+    PyObject <matplotlib.legend.Legend object at 0x7fe66e381880>
 
 
 
@@ -251,13 +251,13 @@ vtufile = vtuIO.VTUIO("examples/square_1e2_pcs_0_ts_1_t_1.000000.vtu", dim=2)
 
 
 
-    PyObject <vtuIO.VTUIO object at 0x7f384c2a0070>
+    PyObject <vtuIO.VTUIO object at 0x7fe66e3b7760>
 
 
 
 
 ```julia
-p_size = length(vtufile.getField("pressure"))
+p_size = length(vtufile.get_field("pressure"))
 ```
 
 
@@ -274,7 +274,7 @@ p0 = ones(p_size) * 1e6;
 
 
 ```julia
-vtufile.writeField(p0, "initialPressure", "mesh_initialpressure.vtu")
+vtufile.write_field(p0, "initialPressure", "mesh_initialpressure.vtu")
 ```
 
 A new field can also created from a three-argument function for all space-dimensions:
@@ -299,7 +299,7 @@ end
 
 
 ```julia
-vtufile.func2Field(p_init, "p_init", "mesh_initialpressure.vtu")
+vtufile.func_to_field(p_init, "p_init", "mesh_initialpressure.vtu")
 ```
 
 It is also possible to write multidimensional arrays using a function.
@@ -320,7 +320,7 @@ end
 
 
 ```julia
-vtufile.func2MdimField([p_init,p_init,null,null], "sigma00","mesh_initialpressure.vtu")
+vtufile.func_to_m_dim_field([p_init,p_init,null,null], "sigma00","mesh_initialpressure.vtu")
 ```
 
 # 3. Reading time-series data from PVD files:
@@ -335,7 +335,7 @@ pvdfile = vtuIO.PVDIO("examples", "square_1e2_pcs_0.pvd", dim=2)
 
 
 
-    PyObject <vtuIO.PVDIO object at 0x7f389ff4cf70>
+    PyObject <vtuIO.PVDIO object at 0x7fe66e3c9b50>
 
 
 
@@ -371,7 +371,7 @@ points = Dict("pt0"=> (0.3,0.5,0.0), "pt1"=> (0.24,0.21,0.0))
 
 
 ```julia
-pressure_linear = pvdfile.readTimeSeries("pressure", points)
+pressure_linear = pvdfile.read_time_series("pressure", points)
 ```
 
 
@@ -385,7 +385,7 @@ pressure_linear = pvdfile.readTimeSeries("pressure", points)
 
 
 ```julia
-pressure_nearest = pvdfile.readTimeSeries("pressure", points, interpolation_method="nearest")
+pressure_nearest = pvdfile.read_time_series("pressure", points, interpolation_method="nearest")
 ```
 
 
@@ -401,9 +401,6 @@ pressure_nearest = pvdfile.readTimeSeries("pressure", points, interpolation_meth
 ```julia
 using Plots
 ```
-
-    WARNING: using Plots.plot in module Main conflicts with an existing identifier.
-
 
 As point pt0 is a node in the mesh, both values at $t=1$ agree, whereas pt1 is not a mesh node point resulting in different values.
 
@@ -458,10 +455,10 @@ t2 = 0.9
 
 
 ```julia
-pressure_xaxis_t1 = pvdfile.readPointSetData(t1, "pressure", pointsetarray=xaxis);
-pressure_diagonal_t1 = pvdfile.readPointSetData(t1, "pressure", pointsetarray=diagonal);
-pressure_xaxis_t2 = pvdfile.readPointSetData(t2, "pressure", pointsetarray=xaxis);
-pressure_diagonal_t2 = pvdfile.readPointSetData(t2, "pressure", pointsetarray=diagonal);
+pressure_xaxis_t1 = pvdfile.read_point_set_data(t1, "pressure", pointsetarray=xaxis);
+pressure_diagonal_t1 = pvdfile.read_point_set_data(t1, "pressure", pointsetarray=diagonal);
+pressure_xaxis_t2 = pvdfile.read_point_set_data(t2, "pressure", pointsetarray=xaxis);
+pressure_diagonal_t2 = pvdfile.read_point_set_data(t2, "pressure", pointsetarray=diagonal);
 ```
 
 
@@ -494,7 +491,7 @@ legend()
 
 
 
-    PyObject <matplotlib.legend.Legend object at 0x7f382f4ec520>
+    PyObject <matplotlib.legend.Legend object at 0x7fe600cb4100>
 
 
 

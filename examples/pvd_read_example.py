@@ -36,7 +36,7 @@ time=pvdfile.timesteps
 selected_points={'pt0': (0.25, 0.5, 0.0), 'pt1': (0.75, 0.5, 0.0)}
 
 # read and interpolate from vtu-files listed in pvd
-pressure_interpolation=pvdfile.readTimeSeries('pressure', selected_points)
+pressure_interpolation=pvdfile.read_time_series('pressure', selected_points)
 
 # read pressure at pt0 from interpolations (dictionary)
 pressure_pt0=pressure_interpolation['pt0']
