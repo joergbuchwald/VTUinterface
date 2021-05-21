@@ -33,9 +33,7 @@ Although, a python package, VTUinterface is tested to work through PyCall under 
 [Basic Usage (julia)](https://github.com/joergbuchwald/VTUinterface/blob/master/README_julia.md)
 
 
-# FAQ/Troubleshooting
-
-# Troubleshooting
+# 2. FAQ/Troubleshooting
 
 
 As the input data is triangulated with QHull for the linear interpolation it might fail at boundaries or if a wrong input dimension is given.
