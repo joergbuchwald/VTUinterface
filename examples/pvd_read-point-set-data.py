@@ -47,8 +47,8 @@ r_diag = np.sqrt(np.array(diagonal)[:,0]**2+np.array(diagonal)[:,1]**2)
 # plot some result
 plt.plot(r_x, pressure_xaxis_t1, label='p_x t=t1')
 plt.plot(r_diag, pressure_diagonal_t1, label='p_diag t=t1')
-plt.plot(r_x, pressure_xaxis_t2, label='p_x t=t1')
-plt.plot(r_diag, pressure_diagonal_t2, label='p_diag t=t1')
+plt.plot(r_x, pressure_xaxis_t2, label='p_x t=t2')
+plt.plot(r_diag, pressure_diagonal_t2, label='p_diag t=t2')
 titlestring="Pressure along x and diagonal"
 plt.title(titlestring)
 plt.xlabel('r')

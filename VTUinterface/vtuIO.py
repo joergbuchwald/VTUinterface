@@ -43,6 +43,7 @@ class VTUIO:
         self.reader.Update()
         self.output = self.reader.GetOutput()
         self.pdata = self.output.GetPointData()
+        self.cdata = self.output.GetCellData()
         self.points = vtk_to_numpy(self.output.GetPoints().GetData())
         self.dim = dim
         self.nneighbors = nneighbors
@@ -88,15 +89,45 @@ class VTUIO:
                         (grid_x, grid_y, grid_z), method=interpolation_method)[0][0][0]
         return resp
 
-    def get_field(self, fieldname):
+    def get_point_field(self, fieldname):
         """
-        Return vtu point field as numpy array.
+        Return vtu cell field as numpy array.
         fieldname : `str`
         """
         field = vtk_to_numpy(self.pdata.GetArray(fieldname))
         return field
 
-    def get_field_names(self):
+    def get_cell_field(self, fieldname):
+        """
+        Return vtu point field as numpy array.
+        fieldname : `str`
+        """
+        field = vtk_to_numpy(self.cdata.GetArray(fieldname))
+        return field
+
+    def get_cell_field_as_point_data(self, fieldname):
+        """
+        Return vtu cell field as point field.
+        fieldname : `str`
+        """
+        c2p = vtk.vtkCellDataToPointData()
+        c2p.SetInputData(self.output)
+        c2p.Update()
+        outpoints = c2p.GetOutput()
+        nodes = outpoints.GetPointData()
+        array =  vtk_to_numpy(nodes.GetArray(fieldname))
+        return array
+
+    def get_cell_field_names(self):
+        """
+        Get names of all cell fields in the vtu file.
+        """
+        fieldnames = []
+        for i in range(self.cdata.GetNumberOfArrays()):
+            fieldnames.append(self.cdata.GetArrayName(i))
+        return fieldnames
+
+    def get_point_field_names(self):
         """
         Get names of all point fields in the vtu file.
         """
