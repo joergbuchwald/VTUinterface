@@ -27,7 +27,7 @@ import vtuIO	# to read and process (point interpolation) vtu- and pvd-files
 data=vtuIO.VTUIO("square_1e2_pcs_0_ts_1_t_1.000000.vtu", dim=2)
 
 # see what is inside the file, which fields and points
-fields=data.get_field_names()
+fields=data.get_point_field_names()
 print("fields:")
 print(fields)
 
