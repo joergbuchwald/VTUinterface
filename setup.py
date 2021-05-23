@@ -53,6 +53,6 @@ setup(name="VTUinterface",
       license="BSD-3 -  see LICENSE.txt",
       platforms=["Windows", "Linux", "Solaris", "Mac OS-X", "Unix"],
       include_package_data=True,
-      install_requires=["lxml", "vtk", "pandas", "scipy"],
+      install_requires=["lxml", "meshio", "pandas", "scipy"],
       py_modules=["vtuIO"],
       package_dir={'': 'VTUinterface'})

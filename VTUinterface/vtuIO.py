@@ -16,9 +16,7 @@ Copyright (c) 2012-2021, OpenGeoSys Community (http://www.opengeosys.org)
 import os
 import numpy as np
 import pandas as pd
-import vtk
-from vtk.util.numpy_support import vtk_to_numpy
-from vtk.util.numpy_support import numpy_to_vtk
+import meshio
 from lxml import etree as ET
 from scipy.interpolate import griddata
 from scipy.interpolate import interp1d
@@ -38,13 +36,11 @@ class VTUIO:
     """
     def __init__(self, filename, nneighbors=20, dim=3):
         self.filename = filename
-        self.reader = vtk.vtkXMLUnstructuredGridReader()
-        self.reader.SetFileName(self.filename)
-        self.reader.Update()
-        self.output = self.reader.GetOutput()
-        self.pdata = self.output.GetPointData()
-        self.cdata = self.output.GetCellData()
-        self.points = vtk_to_numpy(self.output.GetPoints().GetData())
+        self.reader = meshio.vtu.read(filename)
+        self.pdata = self.reader.point_data
+        self.cdata = self.reader.cell_data
+        self.points = self.reader.points
+        self.cells = self.reader.cells
         self.dim = dim
         self.nneighbors = nneighbors
         if self.dim == 2:
@@ -94,47 +90,39 @@ class VTUIO:
         Return vtu cell field as numpy array.
         fieldname : `str`
         """
-        field = vtk_to_numpy(self.pdata.GetArray(fieldname))
-        return field
+        return self.pdata[fieldname]
 
     def get_cell_field(self, fieldname):
         """
         Return vtu point field as numpy array.
         fieldname : `str`
         """
-        field = vtk_to_numpy(self.cdata.GetArray(fieldname))
-        return field
+        return self.cdata[fieldname]
 
-    def get_cell_field_as_point_data(self, fieldname):
-        """
-        Return vtu cell field as point field.
-        fieldname : `str`
-        """
-        c2p = vtk.vtkCellDataToPointData()
-        c2p.SetInputData(self.output)
-        c2p.Update()
-        outpoints = c2p.GetOutput()
-        nodes = outpoints.GetPointData()
-        array =  vtk_to_numpy(nodes.GetArray(fieldname))
-        return array
+#    def get_cell_field_as_point_data(self, fieldname):
+#        """
+#        Return vtu cell field as point field.
+#        fieldname : `str`
+#        """
+#        c2p = vtk.vtkCellDataToPointData()
+#        c2p.SetInputData(self.output)
+#        c2p.Update()
+#        outpoints = c2p.GetOutput()
+#        nodes = outpoints.GetPointData()
+#        array =  vtk_to_numpy(nodes.GetArray(fieldname))
+#        return array
 
     def get_cell_field_names(self):
         """
         Get names of all cell fields in the vtu file.
         """
-        fieldnames = []
-        for i in range(self.cdata.GetNumberOfArrays()):
-            fieldnames.append(self.cdata.GetArrayName(i))
-        return fieldnames
+        return list(self.cdata)
 
     def get_point_field_names(self):
         """
         Get names of all point fields in the vtu file.
         """
-        fieldnames = []
-        for i in range(self.pdata.GetNumberOfArrays()):
-            fieldnames.append(self.pdata.GetArrayName(i))
-        return fieldnames
+        return list(self.pdata)
 
     def get_point_data(self, fieldname, pts = None, interpolation_method="linear"):
         """
@@ -219,23 +207,20 @@ class VTUIO:
                 fieldarray[i] = function(self.points[i,0], self.points[i,1], 0.0)
             else:
                 fieldarray[i] = function(self.points[i,0], self.points[i,1], self.points[i,2])
-        field_vtk = numpy_to_vtk(fieldarray)
-        r = self.pdata.AddArray(field_vtk)
-        self.pdata.GetArray(r).SetName(fieldname)
-        if cell is True:
-            p2c = vtk.vtkPointDataToCellData()
-            p2c.SetInputData(self.output)
-            p2c.Update()
-            outcells = p2c.GetOutput()
-            cells = outcells.GetCellData()
-            array =  cells.GetArray(fieldname)
-            cells_orig = self.output.GetCellData()
-            cells_orig.AddArray(array)
-            self.pdata.RemoveArray(fieldname)
-        writer = vtk.vtkXMLUnstructuredGridWriter()
-        writer.SetFileName(ofilename)
-        writer.SetInputData(self.output)
-        writer.Write()
+        self.pdata[fieldname] = fieldarray
+#        if cell is True:
+#            p2c = vtk.vtkPointDataToCellData()
+#            p2c.SetInputData(self.output)
+#            p2c.Update()
+#            outcells = p2c.GetOutput()
+#            cells = outcells.GetCellData()
+#            array =  cells.GetArray(fieldname)
+#            cells_orig = self.output.GetCellData()
+#            cells_orig.AddArray(array)
+#            self.pdata.RemoveArray(fieldname)
+        mesh = meshio.Mesh(self.points, self.cells, point_data=self.pdata,
+                cell_data=self.cdata)
+        mesh.write(ofilename)
 
     def func_to_m_dim_field(self, functionarray, fieldname, ofilename, cell=False):
         """
@@ -266,64 +251,58 @@ class VTUIO:
                         self.points[i,0],
                         self.points[i,1],
                         self.points[i,2])
-        field_vtk = numpy_to_vtk(fieldarray)
-        r = self.pdata.AddArray(field_vtk)
-        self.pdata.GetArray(r).SetName(fieldname)
-        if cell is True:
-            p2c = vtk.vtkPointDataToCellData()
-            p2c.SetInputData(self.output)
-            p2c.Update()
-            outcells = p2c.GetOutput()
-            cells = outcells.GetCellData()
-            array =  cells.GetArray(fieldname)
-            cells_orig = self.output.GetCellData()
-            cells_orig.AddArray(array)
-            self.pdata.RemoveArray(fieldname)
-        writer = vtk.vtkXMLUnstructuredGridWriter()
-        writer.SetFileName(ofilename)
-        writer.SetInputData(self.output)
-        writer.Write()
+        self.pdata[fieldname] = fieldarray
+#        if cell is True:
+#            p2c = vtk.vtkPointDataToCellData()
+#            p2c.SetInputData(self.output)
+#            p2c.Update()
+#            outcells = p2c.GetOutput()
+#            cells = outcells.GetCellData()
+#            array =  cells.GetArray(fieldname)
+#            cells_orig = self.output.GetCellData()
+#            cells_orig.AddArray(array)
+#            self.pdata.RemoveArray(fieldname)
+        mesh = meshio.Mesh(self.points, self.cells, point_data=self.pdata,
+                cell_data=self.cdata)
+        mesh.write(ofilename)
 
-    def point_data_to_cell_data(self, fieldname, ofilename):
-        """
-        convert pointdata to cell data of field "fieldname"
+#    def point_data_to_cell_data(self, fieldname, ofilename):
+#        """
+#        convert pointdata to cell data of field "fieldname"
+#
+#        Parameters
+#        ----------
+#        fieldname : `str`
+#        ofilename : `str`
+#        """
+#        p2c = vtk.vtkPointDataToCellData()
+#        p2c.SetInputData(self.output)
+#        p2c.Update()
+#        outcells = p2c.GetOutput()
+#        cells = outcells.GetCellData()
+#        array =  cells.GetArray(fieldname)
+#        cells_orig = self.output.GetCellData()
+#        cells_orig.AddArray(array)
+#        writer = vtk.vtkXMLUnstructuredGridWriter()
+#        writer.SetFileName(ofilename)
+#        writer.SetInputData(self.output)
+#        writer.Write()
 
-        Parameters
-        ----------
-        fieldname : `str`
-        ofilename : `str`
-        """
-        p2c = vtk.vtkPointDataToCellData()
-        p2c.SetInputData(self.output)
-        p2c.Update()
-        outcells = p2c.GetOutput()
-        cells = outcells.GetCellData()
-        array =  cells.GetArray(fieldname)
-        cells_orig = self.output.GetCellData()
-        cells_orig.AddArray(array)
-        writer = vtk.vtkXMLUnstructuredGridWriter()
-        writer.SetFileName(ofilename)
-        writer.SetInputData(self.output)
-        writer.Write()
-
-    def write_field(self, field, fieldname, ofilename):
+    def write_field(self, fieldarray, fieldname, ofilename):
         """
         Write a field (numpy array of correct size)
         to field "fieldname" as file "ofilename".
 
         Parameters
         ----------
-        field : `array`
+        fieldarray : `array`
         fieldname : `str`
         ofilename : `str`
         """
-        field_vtk = numpy_to_vtk(field)
-        r = self.pdata.AddArray(field_vtk)
-        self.pdata.GetArray(r).SetName(fieldname)
-        writer = vtk.vtkXMLUnstructuredGridWriter()
-        writer.SetFileName(ofilename)
-        writer.SetInputData(self.output)
-        writer.Write()
+        self.pdata[fieldname] = fieldarray
+        mesh = meshio.Mesh(self.points, self.cells, point_data=self.point_data,
+                cell_data=self.cell_data)
+        mesh.write(ofilename)
 
 
 
