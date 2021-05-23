@@ -69,7 +69,7 @@ class VTUIO:
         """
         Get interpolated data for points_interpol using neighbor points.
         """
-        field = self.get_field(fieldname)
+        field = self.get_point_field(fieldname)
         resp = {}
         for i, (key, val) in enumerate(points_interpol.items()):
             if self.dim == 1:
@@ -432,7 +432,7 @@ class PVDIO:
         if not filename is None:
             vtu = VTUIO(os.path.join(self.folder,filename),
                     nneighbors=self.nneighbors, dim=self.dim)
-            field = vtu.get_field(fieldname)
+            field = vtu.get_point_field(fieldname)
         else:
             filename1 = None
             filename2 = None
@@ -454,8 +454,8 @@ class PVDIO:
                         nneighbors=self.nneighbors, dim=self.dim)
                 vtu2 = VTUIO(os.path.join(self.folder,filename2),
                         nneighbors=self.nneighbors, dim=self.dim)
-                field1 = vtu1.get_field(fieldname)
-                field2 = vtu2.get_field(fieldname)
+                field1 = vtu1.get_point_field(fieldname)
+                field2 = vtu2.get_point_field(fieldname)
                 fieldslope = (field2-field1)/(timestep2-timestep1)
                 field = field1 + fieldslope * (timestep-timestep1)
         return field
