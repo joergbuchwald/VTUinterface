@@ -23,7 +23,7 @@ import vtuIO	# to read and process (point interpolation) vtu- and pvd-files
 # Note that for 2D data in 3D, e.g. x,y!=0 and z=0, 
 # dim must be set to 2, otherwise the interpolator fails.
 # Currently PVDIO assumes 2D data in 3D at x,y and ignores z.
-pvdfile=vtuIO.PVDIO(".", "square_1e2_pcs_0.pvd", dim=2)
+pvdfile=vtuIO.PVDIO("square_1e2_pcs_0.pvd", dim=2)
 
 # define xaxis and diagonal (list)
 xaxis =  [(i,0,0) for i in np.linspace(start=0.0, stop=1.0, num=100)]
