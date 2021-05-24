@@ -338,13 +338,12 @@ class PVDIO:
     nneighbors : `int`, optional
     dim : `int`
     """
-    def __init__(self, folder, filename, nneighbors=20, dim=3):
-        self.folder = folder
-        self.filename = ""
+    def __init__(self, filename, nneighbors=20, dim=3):
+        self.folder, self.filename = os.path.split(filename)
         self.nneighbors = nneighbors
         self.timesteps = np.array([])
         self.vtufilenames = []
-        self.read_pvd(os.path.join(folder, filename))
+        self.read_pvd(os.path.join(self.folder, self.filename))
         self.dim = dim
 
     def read_pvd(self, filename):
