@@ -17,7 +17,7 @@ Basic VTU properties, like fieldnames, points and corresponding fielddata as pro
 
 
 ```python
-vtufile.get_field_names()
+vtufile.get_point_field_names()
 ```
 
 
@@ -45,7 +45,7 @@ vtufile.points[0:3]
 
 
 ```python
-vtufile.get_field("v")[0:3]
+vtufile.get_point_field("v")[0:3]
 ```
 
 
@@ -93,7 +93,7 @@ vtufile = vtuIO.VTUIO("examples/square2d_random.vtu", dim=2)
 
 
 ```python
-field = vtufile.get_field("gaussian_field_2");
+field = vtufile.get_point_field("gaussian_field_2");
 ```
 
 
@@ -109,7 +109,7 @@ plt.tricontourf(triang,field)
 
 
 
-    <matplotlib.tri.tricontour.TriContourSet at 0x7f84fa66b670>
+    <matplotlib.tri.tricontour.TriContourSet at 0x7f81305deac0>
 
 
 
@@ -164,7 +164,7 @@ plt.legend()
 
 
 
-    <matplotlib.legend.Legend at 0x7f84fa629220>
+    <matplotlib.legend.Legend at 0x7f81302c1e80>
 
 
 
@@ -184,7 +184,7 @@ vtufile = vtuIO.VTUIO("examples/square_1e2_pcs_0_ts_1_t_1.000000.vtu", dim=2)
 
 
 ```python
-p_size = len(vtufile.get_field("pressure"))
+p_size = len(vtufile.get_point_field("pressure"))
 ```
 
 
@@ -228,7 +228,7 @@ Similar to reading VTU files, it is possible extract time series data from a lis
 
 
 ```python
-pvdfile = vtuIO.PVDIO("examples", "square_1e2_pcs_0.pvd", dim=2)
+pvdfile = vtuIO.PVDIO("examples/square_1e2_pcs_0.pvd", dim=2)
 ```
 
     examples/square_1e2_pcs_0.pvd
@@ -324,7 +324,7 @@ plt.legend()
 
 
 
-    <matplotlib.legend.Legend at 0x7f84fa491c10>
+    <matplotlib.legend.Legend at 0x7f8130186850>
 
 
 

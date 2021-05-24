@@ -27,7 +27,7 @@ vtufile = vtuIO.VTUIO("examples/square_1e2_pcs_0_ts_1_t_1.000000.vtu", dim=2)
 
 
 
-    PyObject <vtuIO.VTUIO object at 0x7fe66e250760>
+    PyObject <vtuIO.VTUIO object at 0x7f3ccc65a760>
 
 
 
@@ -36,7 +36,7 @@ Basic VTU properties, like fieldnames, points and corresponding fielddata as pro
 
 
 ```julia
-fields=vtufile.get_field_names()
+fields=vtufile.get_point_field_names()
 ```
 
 
@@ -67,7 +67,7 @@ vtufile.points[1:3]
 
 
 ```julia
-vtufile.get_field("v")
+vtufile.get_point_field("v")
 ```
 
 
@@ -150,13 +150,13 @@ vtufile = vtuIO.VTUIO("examples/square2d_random.vtu", dim=2)
 
 
 
-    PyObject <vtuIO.VTUIO object at 0x7fe65b8f20d0>
+    PyObject <vtuIO.VTUIO object at 0x7f3ccc652220>
 
 
 
 
 ```julia
-field = vtufile.get_field("gaussian_field_2");
+field = vtufile.get_point_field("gaussian_field_2");
 ```
 
 
@@ -167,7 +167,7 @@ triang = matplotlib.tri.Triangulation(vtufile.points[:,1], vtufile.points[:,2])
 
 
 
-    PyObject <matplotlib.tri.triangulation.Triangulation object at 0x7fe61648f370>
+    PyObject <matplotlib.tri.triangulation.Triangulation object at 0x7f3c7b057670>
 
 
 
@@ -185,7 +185,7 @@ tricontourf(triang,field)
 
 
 
-    PyObject <matplotlib.tri.tricontour.TriContourSet object at 0x7fe6142ed640>
+    PyObject <matplotlib.tri.tricontour.TriContourSet object at 0x7f3c76b14790>
 
 
 
@@ -236,7 +236,7 @@ legend()
 
 
 
-    PyObject <matplotlib.legend.Legend object at 0x7fe66e381880>
+    PyObject <matplotlib.legend.Legend object at 0x7f3cccb83520>
 
 
 
@@ -251,13 +251,13 @@ vtufile = vtuIO.VTUIO("examples/square_1e2_pcs_0_ts_1_t_1.000000.vtu", dim=2)
 
 
 
-    PyObject <vtuIO.VTUIO object at 0x7fe66e3b7760>
+    PyObject <vtuIO.VTUIO object at 0x7f3cccbb9190>
 
 
 
 
 ```julia
-p_size = length(vtufile.get_field("pressure"))
+p_size = length(vtufile.get_point_field("pressure"))
 ```
 
 
@@ -329,13 +329,13 @@ Similar to reading VTU files, it is possible extract time series data from a lis
 
 
 ```julia
-pvdfile = vtuIO.PVDIO("examples", "square_1e2_pcs_0.pvd", dim=2)
+pvdfile = vtuIO.PVDIO("examples/square_1e2_pcs_0.pvd", dim=2)
 ```
 
 
 
 
-    PyObject <vtuIO.PVDIO object at 0x7fe66e3c9b50>
+    PyObject <vtuIO.PVDIO object at 0x7f3cccbf1550>
 
 
 
@@ -491,7 +491,7 @@ legend()
 
 
 
-    PyObject <matplotlib.legend.Legend object at 0x7fe600cb4100>
+    PyObject <matplotlib.legend.Legend object at 0x7f3c5f4d19d0>
 
 
 
