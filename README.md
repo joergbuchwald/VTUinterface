@@ -14,6 +14,7 @@ VTUinterface together with ogs6py can be viewed in action here:
 
 # 0. Installation
 
+Note: VTUinterface requires the vtk wrapper for python. Alternatively, a version based on [MESHIO](https://github.com/nschloe/meshio) is also under development (branch: `meshio`).
 clone the repository and use pip to install the package
 
 ```shell
