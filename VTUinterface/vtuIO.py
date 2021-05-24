@@ -333,7 +333,6 @@ class PVDIO:
 
     Parameters
     ----------
-    folder : `str`
     filename : `str`
     nneighbors : `int`, optional
     dim : `int`
