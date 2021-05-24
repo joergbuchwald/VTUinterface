@@ -1,6 +1,6 @@
 import unittest
 import numpy as np
-import vtuIO
+from context import vtuIO
 
 class TestiOGS(unittest.TestCase):
 
