@@ -5,7 +5,7 @@
 
 VTUinterface is a python package for easy accessing VTU/PVD files as outputed by Finite Element software like OpenGeoSys. It uses the VTK python wrapper and linear interpolation between time steps and grid points access any points in and and time within the simulation domain.
 
-[Documentation reference](https://joergbuchwald.github.io/VTUinterface-doc)
+[API reference](https://joergbuchwald.github.io/VTUinterface-doc)
 
 
 VTUinterface together with ogs6py can be viewed in action here:
@@ -14,7 +14,7 @@ VTUinterface together with ogs6py can be viewed in action here:
 
 # 0. Installation
 
-Note: VTUinterface requires the vtk wrapper for python. Alternatively, a version based on [MESHIO](https://github.com/nschloe/meshio) is also under development (branch: `meshio`).
+Note: VTUinterface requires the vtk wrapper for python. Alternatively, [a version](https://github.com/joergbuchwald/VTUinterface/tree/meshio) based on [MESHIO](https://github.com/nschloe/meshio) is also under development.
 clone the repository and use pip to install the package
 
 ```shell
