@@ -35,8 +35,12 @@ class VTUIO:
                  default: 20
     dim : `int`, optional
           default: 3
+    one_d_axis : `int`
+                 between 0 and 2, default: 0
+    two_d_planenormal : `int`
+                  between 0 and 2, default: 2
     """
-    def __init__(self, filename, nneighbors=20, dim=3):
+    def __init__(self, filename, nneighbors=20, dim=3, one_d_axis=0, two_d_planenormal=2):
         self.filename = filename
         self.reader = vtk.vtkXMLUnstructuredGridReader()
         self.reader.SetFileName(self.filename)
@@ -47,8 +51,13 @@ class VTUIO:
         self.points = vtk_to_numpy(self.output.GetPoints().GetData())
         self.dim = dim
         self.nneighbors = nneighbors
+        if self.dim == 1:
+            self.one_d_axis = one_d_axis
+            self.points = self.points[:,one_d_axis]
         if self.dim == 2:
-            self.points = np.delete(self.points, 2, 1)
+            self.plane = [0, 1, 2]
+            self.plane.pop(two_d_planenormal)
+            self.points = np.delete(self.points, two_d_planenormal, 1)
 
     def get_neighbors(self, points_interpol):
         """
@@ -56,10 +65,13 @@ class VTUIO:
         """
         df = pd.DataFrame(self.points)
         neighbors = {}
+        if self.dim == 1:
+            return neighbors
         for i, (_, val) in enumerate(points_interpol.items()):
             if self.dim == 2:
-                df["r_"+str(i)] = (df[0]-val[0]) * (df[0]-val[0]) + (df[1]-val[1]) * (df[1]-val[1])
-            else:
+                x, y = self.plane
+                df["r_"+str(i)] = (df[x]-val[x]) * (df[x]-val[x]) + (df[y]-val[y]) * (df[y]-val[y])
+            elif self.dim == 3:
                 df["r_"+str(i)] = ((df[0]-val[0]) * (df[0]-val[0]) + (df[1]-val[1]) * (df[1]-val[1])
                         + (df[2]-val[2]) * (df[2]-val[2]))
             neighbors[i] = df.sort_values(by=["r_" + str(i)]).head(self.nneighbors).index
@@ -73,14 +85,15 @@ class VTUIO:
         resp = {}
         for i, (key, val) in enumerate(points_interpol.items()):
             if self.dim == 1:
-                data = pd.DataFrame(self.points[:,0], columns = ['x'])
+                data = pd.DataFrame(self.points, columns = ['x'])
                 data["y"] = field
                 data.sort_values(by = ['x'], inplace=True)
                 data.drop_duplicates(subset=['x'], inplace=True)
                 f = interp1d(data['x'], data['y'])
-                resp[key] = f(val[0])
+                resp[key] = f(val[self.one_d_axis])
             elif self.dim == 2:
-                grid_x, grid_y = np.array([[[val[0]]],[[val[1]]]])
+                x, y = self.plane
+                grid_x, grid_y = np.array([[[val[x]]],[[val[y]]]])
                 resp[key] = griddata(self.points[neighbors[i]], field[neighbors[i]],
                         (grid_x, grid_y), method=interpolation_method)[0][0]
             else:
@@ -336,14 +349,20 @@ class PVDIO:
     filename : `str`
     nneighbors : `int`, optional
     dim : `int`
+    one_d_axis : `int`
+                 between 0 and 2, default: 0
+    two_d_planenormal : `int`
+                  between 0 and 2, default: 2
     """
-    def __init__(self, filename, nneighbors=20, dim=3):
+    def __init__(self, filename, nneighbors=20, dim=3, one_d_axis=0, two_d_planenormal=2):
         self.folder, self.filename = os.path.split(filename)
         self.nneighbors = nneighbors
         self.timesteps = np.array([])
         self.vtufilenames = []
         self.read_pvd(os.path.join(self.folder, self.filename))
         self.dim = dim
+        self.one_d_axis = one_d_axis
+        self.two_d_planenormal = two_d_planenormal
 
     def read_pvd(self, filename):
         """
@@ -390,7 +409,9 @@ class PVDIO:
             # TODO: real handling of parallel files
             fn_new = filename.replace(".pvtu", "_0.vtu")
             vtu = VTUIO(os.path.join(self.folder,fn_new),
-                    nneighbors=self.nneighbors, dim=self.dim)
+                    nneighbors=self.nneighbors, dim=self.dim,
+                    one_d_axis=self.one_d_axis,
+                    two_d_planenormal=self.two_d_planenormal)
             if i == 0:
                 nb = vtu.get_neighbors(pts)
             if isinstance(fieldname, str):
@@ -429,7 +450,9 @@ class PVDIO:
                 filename = self.vtufilenames[i]
         if not filename is None:
             vtu = VTUIO(os.path.join(self.folder,filename),
-                    nneighbors=self.nneighbors, dim=self.dim)
+                    nneighbors=self.nneighbors, dim=self.dim,
+                    one_d_axis=self.one_d_axis,
+                    two_d_planenormal=self.two_d_planenormal)
             field = vtu.get_point_field(fieldname)
         else:
             filename1 = None
@@ -449,9 +472,13 @@ class PVDIO:
                 print("time step is out of range")
             else:
                 vtu1 = VTUIO(os.path.join(self.folder,filename1),
-                        nneighbors=self.nneighbors, dim=self.dim)
+                        nneighbors=self.nneighbors, dim=self.dim,
+                        one_d_axis=self.one_d_axis,
+                        two_d_planenormal=self.two_d_planenormal)
                 vtu2 = VTUIO(os.path.join(self.folder,filename2),
-                        nneighbors=self.nneighbors, dim=self.dim)
+                        nneighbors=self.nneighbors, dim=self.dim,
+                        one_d_axis=self.one_d_axis,
+                        two_d_planenormal=self.two_d_planenormal)
                 field1 = vtu1.get_point_field(fieldname)
                 field2 = vtu2.get_point_field(fieldname)
                 fieldslope = (field2-field1)/(timestep2-timestep1)
@@ -479,7 +506,9 @@ class PVDIO:
                 filename = self.vtufilenames[i]
         if not filename is None:
             vtu = VTUIO(os.path.join(self.folder,filename),
-                    nneighbors=self.nneighbors, dim=self.dim)
+                    nneighbors=self.nneighbors, dim=self.dim,
+                    one_d_axis=self.one_d_axis,
+                    two_d_planenormal=self.two_d_planenormal)
             field = vtu.get_point_set_data(fieldname, pointsetarray, interpolation_method=interpolation_method)
         else:
             filename1 = None
@@ -499,9 +528,13 @@ class PVDIO:
                 print("time step is out of range")
             else:
                 vtu1 = VTUIO(os.path.join(self.folder,filename1),
-                    nneighbors=self.nneighbors, dim=self.dim)
+                    nneighbors=self.nneighbors, dim=self.dim,
+                    one_d_axis=self.one_d_axis,
+                    two_d_planenormal=self.two_d_planenormal)
                 vtu2 = VTUIO(os.path.join(self.folder,filename2),
-                    nneighbors=self.nneighbors, dim=self.dim)
+                    nneighbors=self.nneighbors, dim=self.dim,
+                    one_d_axis=self.one_d_axis,
+                    two_d_planenormal=self.two_d_planenormal)
                 field1 = vtu1.get_point_set_data(fieldname, pointsetarray, interpolation_method=interpolation_method)
                 field2 = vtu2.get_point_set_data(fieldname, pointsetarray, interpolation_method=interpolation_method)
                 fieldslope = (field2-field1)/(timestep2-timestep1)

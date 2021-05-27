@@ -48,7 +48,7 @@ class TestiOGS(unittest.TestCase):
         for pt in pts:
             for i, field in enumerate(pflist):
                 self.assertAlmostEqual(float(data[pt][field]),(i+1)*pts[pt][0])
-    def test_point_to_celdata(self):
+    def test_point_to_celldata(self):
         vtufile = VTUinterface.VTUIO("examples/line_1_time_dep_dirichlet.vtu", dim=1)
         vtufile.point_data_to_cell_data("t_10s", "line_1_time_dep_dirichlet_cdata.vtu")
         vtufile = VTUinterface.VTUIO("line_1_time_dep_dirichlet_cdata.vtu", dim=1)
@@ -58,13 +58,13 @@ class TestiOGS(unittest.TestCase):
         field = vtufile.get_cell_field_as_point_data("t_10s")
         for i, entry in enumerate(field):
             if i == 0:
-                self.assertEqual(vtufile.points[i][0], 0)
+                self.assertEqual(vtufile.points[i], 0)
                 self.assertEqual(entry, 0.5)
             elif i == 10:
-                self.assertEqual(vtufile.points[i][0], 1)
+                self.assertEqual(vtufile.points[i], 1)
                 self.assertEqual(entry, 9.5)
             else:
-                self.assertAlmostEqual(entry, vtufile.points[i][0]*10)
+                self.assertAlmostEqual(entry, vtufile.points[i]*10)
     def test_read_time_step(self):
         t1 = 0.5
         t2 = 1
