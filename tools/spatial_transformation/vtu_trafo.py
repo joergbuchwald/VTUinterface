@@ -137,15 +137,15 @@ if (args.set_2D_z is not None) and not reverse_flag:
 
 mesh.points = new_points 
 
-for point_data_key in point_data.keys():
+for point_data_key, point_data_value in point_data.items():
     if point_data_key in vector_data:
-        rows, cols = point_data[point_data_key].shape
+        rows, cols = point_data_value.shape
         if cols == 2:
-            vectors = np.concatenate((point_data[point_data_key], np.zeros((rows,1))), axis=1)
-            mesh.point_data[point_data_key] = spR.apply(vectors, inverse=reverse_flag) 
+            vectors = np.concatenate((point_data_value, np.zeros((rows,1))), axis=1)
+            point_data_value = spR.apply(vectors, inverse=reverse_flag) 
         elif cols == 3:
             vectors = point_data[point_data_key] 
-            mesh.point_data[point_data_key] = spR.apply(vectors, inverse=reverse_flag) 
+            point_data_value = spR.apply(vectors, inverse=reverse_flag) 
         else:
             print("Not a vector: ", point_data_key)
         
