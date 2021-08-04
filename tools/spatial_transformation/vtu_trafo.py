@@ -7,27 +7,29 @@ A frequent use case are 2D-slices in 3D to be transformed into x-y-coordinates
 (post-processing).
 
 TODO
-    implement for THM result types: done Darcy velocity (point data)
+    implement for further THM result types: done Darcy velocity (point data)
     
 SPYDER
    runfile('vtu_trafo.py', args='-i example4preprocessing.vtu -o forward.vtu -x 9200 -X 18000 -y 9000 -Y 20000')
    runfile('vtu_trafo.py', args='-i example4postprocessing.vtu -o backward.vtu -x 9200 -X 18000 -y 9000 -Y 20000 -r')
 """
-import meshio
+import vtk
+from vtk.util.numpy_support import vtk_to_numpy
+from vtk.util.numpy_support import numpy_to_vtk
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 import argparse
 
-tested_meshio_version = "4.4.0"
+tested_vtk_version = "9.0.1"
 vtutrafo_version = "0.0"
-vector_data = {'DarcyVelocity'}   # list data that transforms like vectors
+vector_names = {'DarcyVelocity'}   # list names of data that transforms like vectors
 
 # parsing command line arguments
 parser = argparse.ArgumentParser()
 parser = argparse.ArgumentParser(
     description="Transforms mesh points and results between two orthonormal coordinate systems. Needed to run ogs on 2D-slices from a 3D-model.",
-    epilog="Tested with Meshio "
-    + tested_meshio_version
+    epilog="Tested with VTK "
+    + tested_vtk_version
 )
 parser.add_argument(
     "-i",
@@ -122,35 +124,65 @@ spR, spMeanError = R.align_vectors(global_base, local_base)
 
 
 ###   APPLY TRANSFORMATION   ###
-mesh=meshio.read(inputfile)   
-print(mesh)
-points, point_data = mesh.points, mesh.point_data
+# Read file
+reader = vtk.vtkXMLUnstructuredGridReader()
+reader.SetFileName(inputfile)
+reader.Update()  
+vtk_mesh = reader.GetOutput()
+vtk_pdata = vtk_mesh.GetPointData()
+vtk_cdata = vtk_mesh.GetCellData()
+vtk_points = vtk_mesh.GetPoints()
+
+print("{} Points".format(vtk_mesh.GetNumberOfPoints()))
+pdata_array_names = []
+for i in range(vtk_pdata.GetNumberOfArrays()):
+    pdata_array_names.append( vtk_pdata.GetArrayName(i) )
+print("Point Data:", pdata_array_names)    
+
+print("{} Cells".format(vtk_mesh.GetNumberOfCells()))
+cdata_array_names = []
+for i in range(vtk_cdata.GetNumberOfArrays()):
+    cdata_array_names.append( vtk_cdata.GetArrayName(i) )
+print("Cell Data: ", cdata_array_names)    
 
 # transform mesh points (nodes)
+points = vtk_to_numpy(vtk_points.GetData())
+
 if (args.set_2D_z is not None) and reverse_flag:
     points[:,2] = args.set_2D_z   # set z coordinate in 2D, i.e. before trafo
     
-new_points = spR.apply(points, inverse=reverse_flag) 
+points = spR.apply(points, inverse=reverse_flag) 
 
 if (args.set_2D_z is not None) and not reverse_flag:
-    new_points[:,2] = args.set_2D_z   # set z coordinate in 2D, i.e. after trafo 
+    points[:,2] = args.set_2D_z   # set z coordinate in 2D, i.e. after trafo 
 
-mesh.points = new_points 
+vtk_points.SetData(numpy_to_vtk(points))
 
-for point_data_key, point_data_value in point_data.items():
-    if point_data_key in vector_data:
-        rows, cols = point_data_value.shape
-        if cols == 2:
-            vectors = np.concatenate((point_data_value, np.zeros((rows,1))), axis=1)
-            point_data_value = spR.apply(vectors, inverse=reverse_flag) 
+
+# transform point data
+for pdata_array_name in pdata_array_names:
+    if pdata_array_name in vector_names:
+        vtk_pdata_array = vtk_pdata.GetArray(pdata_array_name)
+        pdata_array = vtk_to_numpy(vtk_pdata_array)
+        rows, cols = pdata_array.shape
+        if cols == 2:   # append zero z-component
+            pdata_array = spR.apply( np.concatenate((pdata_array, np.zeros((rows,1))), axis=1), inverse=reverse_flag) 
+            print(pdata_array_name + " augmented and transformed")      
+            vtk_pdata.RemoveArray(pdata_array_name)
+            r = vtk_pdata.AddArray(numpy_to_vtk(pdata_array))
+            vtk_pdata.GetArray(r).SetName(pdata_array_name)
         elif cols == 3:
-            vectors = point_data[point_data_key] 
-            point_data_value = spR.apply(vectors, inverse=reverse_flag) 
+            pdata_array = spR.apply(pdata_array, inverse=reverse_flag) 
+            print(pdata_array_name + " transformed")    
+            vtk_pdata.RemoveArray(pdata_array_name)
+            r = vtk_pdata.AddArray(numpy_to_vtk(pdata_array))
+            vtk_pdata.GetArray(r).SetName(pdata_array_name)
         else:
-            print("Not a vector: ", point_data_key)
-        
-meshio.write(outputfile, mesh)
+            print("Not a vector: ", pdata_array_name)
 
-#pressure_field = data.get_field("pressure")
-#print("pressure at points")
-#print(pressure_field)
+
+# write file    
+writer = vtk.vtkXMLUnstructuredGridWriter()
+writer.SetFileName(outputfile)
+writer.SetInputData(vtk_mesh)
+writer.Write()
