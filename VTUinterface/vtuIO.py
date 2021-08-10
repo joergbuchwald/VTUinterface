@@ -83,6 +83,9 @@ class VTUIO:
     def get_nearest(self, points_interpol):
         """
         Return a dictionary with closest mesh points
+
+        Parameters
+        ----------
         points_interpol : `dict`
         """
         nb = self.get_neighbors(points_interpol)
@@ -116,7 +119,7 @@ class VTUIO:
                 resp[key] = griddata(self.points[neighbors[i]], field[neighbors[i]],
                         (grid_x, grid_y, grid_z), method=interpolation_method)[0][0][0]
         return resp
-    
+
     def get_data_vtk(self, points_interpol, interpolation_method="linear"):
         """
         Get interpolated data for points_interpol using vtks built-in interpolation methods
@@ -144,6 +147,9 @@ class VTUIO:
     def get_point_field(self, fieldname):
         """
         Return vtu cell field as numpy array.
+
+        Parameters
+        ----------
         fieldname : `str`
         """
         field = vtk_to_numpy(self.pdata.GetArray(fieldname))
@@ -152,6 +158,9 @@ class VTUIO:
     def get_cell_field(self, fieldname):
         """
         Return vtu point field as numpy array.
+
+        Parameters
+        ----------
         fieldname : `str`
         """
         field = vtk_to_numpy(self.cdata.GetArray(fieldname))
@@ -160,6 +169,9 @@ class VTUIO:
     def get_cell_field_as_point_data(self, fieldname):
         """
         Return vtu cell field as point field.
+
+        Parameters
+        ----------
         fieldname : `str`
         """
         c2p = vtk.vtkCellDataToPointData()
@@ -243,7 +255,7 @@ class VTUIO:
         else:
             raise RuntimeError(f"Interpolation backend {self.interpolation_backend} not found.")
         return resp
-    
+
 
     def get_point_set_data(self, fieldname, pointsetarray=None, interpolation_method="linear"):
         """
