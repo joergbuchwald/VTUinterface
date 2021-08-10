@@ -38,9 +38,11 @@ class VTUIO:
     one_d_axis : `int`
                  between 0 and 2, default: 0
     two_d_planenormal : `int`
-                  between 0 and 2, default: 2
+                 between 0 and 2, default: 2
+    interpolation_backend : `str`
+                 scipy or vtk 
     """
-    def __init__(self, filename, nneighbors=20, dim=3, one_d_axis=0, two_d_planenormal=2):
+    def __init__(self, filename, nneighbors=20, dim=3, one_d_axis=0, two_d_planenormal=2, interpolation_backend="scipy"):
         self.filename = filename
         self.reader = vtk.vtkXMLUnstructuredGridReader()
         self.reader.SetFileName(self.filename)
@@ -58,6 +60,7 @@ class VTUIO:
             self.plane = [0, 1, 2]
             self.plane.pop(two_d_planenormal)
             self.points = np.delete(self.points, two_d_planenormal, 1)
+        self.interpolation_backend = interpolation_backend
 
     def get_neighbors(self, points_interpol):
         """
@@ -77,7 +80,19 @@ class VTUIO:
             neighbors[i] = df.sort_values(by=["r_" + str(i)]).head(self.nneighbors).index
         return neighbors
 
-    def get_data(self, neighbors, points_interpol, fieldname, interpolation_method="linear"):
+    def get_nearest(self, points_interpol):
+        """
+        Return a dictionary with closest mesh points
+        points_interpol : `dict`
+        """
+        nb = self.get_neighbors(points_interpol)
+        nearest = {}
+        for i, (key, _) in enumerate(points_interpol.items()):
+            nearest[key] = self.points[nb[i][0]]
+        return nearest
+
+
+    def get_data_scipy(self, neighbors, points_interpol, fieldname, interpolation_method="linear"):
         """
         Get interpolated data for points_interpol using neighbor points.
         """
@@ -101,6 +116,30 @@ class VTUIO:
                 resp[key] = griddata(self.points[neighbors[i]], field[neighbors[i]],
                         (grid_x, grid_y, grid_z), method=interpolation_method)[0][0][0]
         return resp
+    
+    def get_data_vtk(self, points_interpol, interpolation_method="linear"):
+        """
+        Get interpolated data for points_interpol using vtks built-in interpolation methods
+        """
+        kernels = {"voronoi": vtk.vtkVoronoiKernel(), "gaussian": vtk.vtkGaussianKernel(),
+        "shepard": vtk.vtkShepardKernel(), "linear": vtk.vtkLinearKernel()}
+        pointnumpyarray = np.array([points_interpol[pt] for pt in points_interpol])
+        out_u_grid = vtk.vtkUnstructuredGrid()
+        r = vtk.vtkPoints()
+        r.SetData(numpy_to_vtk(pointnumpyarray))
+        out_u_grid.SetPoints(r)
+        locator = vtk.vtkStaticPointLocator()
+        locator.SetDataSet(self.output)
+        locator.BuildLocator()
+        interpolator = vtk.vtkPointInterpolator()
+        interpolator.SetInputData(out_u_grid)
+        interpolator.SetSourceData(self.output)
+        interpolator.SetKernel(kernels[interpolation_method])
+        interpolator.SetLocator(locator)
+        interpolator.Update()
+        return interpolator.GetOutput().GetPointData()
+
+
 
     def get_point_field(self, fieldname):
         """
@@ -171,19 +210,40 @@ class VTUIO:
                 resp[pt] = {}
                 for field in fieldname:
                     resp[pt][field] = []
-        nb = self.get_neighbors(pts)
-        if isinstance(fieldname, str):
-            data = self.get_data(nb, pts, fieldname, interpolation_method=interpolation_method)
-            for pt in pts:
-                resp[pt]=data[pt]
-        elif isinstance(fieldname, list):
-            data = {}
-            for field in fieldname:
-                data[field] = self.get_data(nb, pts, field, interpolation_method=interpolation_method)
-            for pt in pts:
+        # TODO: move following part into separate method (similar code in PVDIO)
+        if self.interpolation_backend == "scipy":
+            nb = self.get_neighbors(pts)
+            if isinstance(fieldname, str):
+                data = self.get_data_scipy(nb, pts, fieldname, interpolation_method=interpolation_method)
+                for pt in pts:
+                    resp[pt] = data[pt]
+            elif isinstance(fieldname, list):
+                data = {}
                 for field in fieldname:
-                    resp[pt][field] = data[field][pt]
+                    data[field] = self.get_data_scipy(nb, pts, field, 
+                            interpolation_method=interpolation_method)
+                for pt in pts:
+                    for field in fieldname:
+                        resp[pt][field] = data[field][pt]
+        elif self.interpolation_backend == "vtk":
+            if isinstance(fieldname, str):
+                resp_array = vtk_to_numpy(self.get_data_vtk(
+                        pts, interpolation_method=interpolation_method).GetArray(fieldname))
+                for i, pt in enumerate(pts):
+                    resp[pt] = resp_array[i]
+
+            elif isinstance(fieldname, list):
+                resp_array_dict = {}
+                vtkdata = self.get_data_vtk(pts, interpolation_method=interpolation_method)
+                for field in fieldname:
+                    resp_array_dict[field] = vtk_to_numpy(vtkdata.GetArray(fieldname))
+                for i, pt in enumerate(pts):
+                    for field in fieldname:
+                        resp[pt][field] = resp_array_dict[field][i]
+        else:
+            raise RuntimeError(f"Interpolation backend {self.interpolation_backend} not found.")
         return resp
+    
 
     def get_point_set_data(self, fieldname, pointsetarray=None, interpolation_method="linear"):
         """
@@ -353,8 +413,10 @@ class PVDIO:
                  between 0 and 2, default: 0
     two_d_planenormal : `int`
                   between 0 and 2, default: 2
+    interpolation_backend : `str`
+                 scipy or vtk 
     """
-    def __init__(self, filename, nneighbors=20, dim=3, one_d_axis=0, two_d_planenormal=2):
+    def __init__(self, filename, nneighbors=20, dim=3, one_d_axis=0, two_d_planenormal=2, interpolation_backend="scipy"):
         self.folder, self.filename = os.path.split(filename)
         self.nneighbors = nneighbors
         self.timesteps = np.array([])
@@ -363,6 +425,7 @@ class PVDIO:
         self.dim = dim
         self.one_d_axis = one_d_axis
         self.two_d_planenormal = two_d_planenormal
+        self.interpolation_backend = interpolation_backend
 
     def read_pvd(self, filename):
         """
@@ -372,7 +435,6 @@ class PVDIO:
         ----------
         filename : `str`
         """
-        print(filename)
         self.filename = filename
         tree = ET.parse(self.filename)
         root = tree.getroot()
@@ -411,20 +473,36 @@ class PVDIO:
             vtu = VTUIO(os.path.join(self.folder,fn_new),
                     nneighbors=self.nneighbors, dim=self.dim,
                     one_d_axis=self.one_d_axis,
-                    two_d_planenormal=self.two_d_planenormal)
-            if i == 0:
-                nb = vtu.get_neighbors(pts)
-            if isinstance(fieldname, str):
-                data = vtu.get_data(nb, pts, fieldname, interpolation_method=interpolation_method)
-                for pt in pts:
-                    resp_t[pt].append(data[pt])
-            elif isinstance(fieldname, list):
-                data = {}
-                for field in fieldname:
-                    data[field] = vtu.get_data(nb, pts, field, interpolation_method=interpolation_method)
-                for pt in pts:
+                    two_d_planenormal=self.two_d_planenormal,
+                    interpolation_backend=self.interpolation_backend)
+            if self.interpolation_backend == "scipy":
+                if i == 0:
+                    nb = vtu.get_neighbors(pts)
+                if isinstance(fieldname, str):
+                    data = vtu.get_data_scipy(nb, pts, fieldname, interpolation_method=interpolation_method)
+                    for pt in pts:
+                        resp_t[pt].append(data[pt])
+                elif isinstance(fieldname, list):
+                    data = {}
                     for field in fieldname:
-                        resp_t[pt][field].append(data[field][pt])
+                        data[field] = vtu.get_data_scipy(nb, pts, field, interpolation_method=interpolation_method)
+                    for pt in pts:
+                        for field in fieldname:
+                            resp_t[pt][field].append(data[field][pt])
+            elif self.interpolation_backend == "vtk":
+                if isinstance(fieldname, str):
+                    data = vtk_to_numpy(
+                        vtu.get_data_vtk(pts, interpolation_method=interpolation_method).GetArray(fieldname))
+                    for i, pt in enumerate(pts):
+                        resp_t[pt].append(data[i])
+                elif isinstance(fieldname, list):
+                    data = {}
+                    vtkdata = vtu.get_data_vtk(pts, interpolation_method=interpolation_method)
+                    for field in fieldname:
+                        data[field] = vtk_to_numpy(vtkdata.GetArray(fieldname))
+                    for i, pt in enumerate(pts):
+                        for field in fieldname:
+                            resp_t[pt][field].append(data[field][i])
         resp_t_array = {}
         for pt, field in resp_t.items():
             if isinstance(fieldname, str):
@@ -452,7 +530,8 @@ class PVDIO:
             vtu = VTUIO(os.path.join(self.folder,filename),
                     nneighbors=self.nneighbors, dim=self.dim,
                     one_d_axis=self.one_d_axis,
-                    two_d_planenormal=self.two_d_planenormal)
+                    two_d_planenormal=self.two_d_planenormal,
+                    interpolation_backend=self.interpolation_backend)
             field = vtu.get_point_field(fieldname)
         else:
             filename1 = None
@@ -474,11 +553,13 @@ class PVDIO:
                 vtu1 = VTUIO(os.path.join(self.folder,filename1),
                         nneighbors=self.nneighbors, dim=self.dim,
                         one_d_axis=self.one_d_axis,
-                        two_d_planenormal=self.two_d_planenormal)
+                        two_d_planenormal=self.two_d_planenormal,
+                        interpolation_backend=self.interpolation_backend)
                 vtu2 = VTUIO(os.path.join(self.folder,filename2),
                         nneighbors=self.nneighbors, dim=self.dim,
                         one_d_axis=self.one_d_axis,
-                        two_d_planenormal=self.two_d_planenormal)
+                        two_d_planenormal=self.two_d_planenormal,
+                        interpolation_backend=self.interpolation_backend)
                 field1 = vtu1.get_point_field(fieldname)
                 field2 = vtu2.get_point_field(fieldname)
                 fieldslope = (field2-field1)/(timestep2-timestep1)
@@ -508,7 +589,8 @@ class PVDIO:
             vtu = VTUIO(os.path.join(self.folder,filename),
                     nneighbors=self.nneighbors, dim=self.dim,
                     one_d_axis=self.one_d_axis,
-                    two_d_planenormal=self.two_d_planenormal)
+                    two_d_planenormal=self.two_d_planenormal,
+                    interpolation_backend=self.interpolation_backend)
             field = vtu.get_point_set_data(fieldname, pointsetarray, interpolation_method=interpolation_method)
         else:
             filename1 = None
@@ -530,11 +612,13 @@ class PVDIO:
                 vtu1 = VTUIO(os.path.join(self.folder,filename1),
                     nneighbors=self.nneighbors, dim=self.dim,
                     one_d_axis=self.one_d_axis,
-                    two_d_planenormal=self.two_d_planenormal)
+                    two_d_planenormal=self.two_d_planenormal,
+                    interpolation_backend=self.interpolation_backend)
                 vtu2 = VTUIO(os.path.join(self.folder,filename2),
                     nneighbors=self.nneighbors, dim=self.dim,
                     one_d_axis=self.one_d_axis,
-                    two_d_planenormal=self.two_d_planenormal)
+                    two_d_planenormal=self.two_d_planenormal,
+                    interpolation_backend=self.interpolation_backend)
                 field1 = vtu1.get_point_set_data(fieldname, pointsetarray, interpolation_method=interpolation_method)
                 field2 = vtu2.get_point_set_data(fieldname, pointsetarray, interpolation_method=interpolation_method)
                 fieldslope = (field2-field1)/(timestep2-timestep1)
