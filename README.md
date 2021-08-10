@@ -45,8 +45,8 @@ As the input data is triangulated with QHull for the linear interpolation it mig
 Possible solutions:
 
 - In order for interpolation to work correctly providing the correct dimension (set via `dim` keyword) of the problem is crucial.
-- As the `dim` keyword specifies also the coordinates to use, VTUinterface assumes that `dim=1` refers to the x coordinate and `dim=2` implies that the problem lies in the xy-plane.
+- As the `dim` keyword specifies also the coordinates to use, VTUinterface assumes that `dim=1` refers to the x coordinate and `dim=2` implies that the problem lies in the xy-plane by default. This can be changed by specifying `one_d_axis` for one dimension or `two_d_planenormal` for two dimensions.
 - For some meshes it might help to adjust the number of points taken into account by the triangulation, which can be done using the `nneighbors` keyword. Default value is 20.
 - Especially along boundaries, linear interpolation with the QHULL method often fails, this can be resolved bei using nearest neighbor interpolation.
-
+- Alternatively, you can change now the `interpolation_backend` from scipy to vtk and try out different interpolation kernels.
 
