@@ -37,24 +37,28 @@ ORG_Z="original_z"
 stored_data_found = False
 
 # parsing command line arguments
-parser = argparse.ArgumentParser()
 parser = argparse.ArgumentParser(
-    description="Transforms mesh points and results between two orthonormal coordinate systems. Needed to run ogs on 2D-slices from a 3D-model.",
+    description="Transforms mesh points and results between two orthonormal coordinate systems. Needed to run OpenGeoSys on 2D-slices from a 3D-model.",
     epilog="Tested with VTK "
     + tested_vtk_version
 )
-parser.add_argument(
+
+required = parser.add_argument_group('required arguments')
+required.add_argument(
     "-i",
     "--input",
     default="",
+    required=True,
     help='input file'
 )
-parser.add_argument(
+required.add_argument(
     "-o",
     "--output",
     default="",
+    required=True,
     help="output file"
 )
+
 parser.add_argument(
     "-x",
     "--start-x",
@@ -86,18 +90,19 @@ parser.add_argument(
 parser.add_argument(
         "-z",
         "--set-2D-z",
+        metavar="2D_Z",
         type=float,
         help="enforces given z-coordinate in 2D, except for reverse trafo with given original points (autodetect). Note that forward trafo ends in 2D and reverse trafo starts in 2D"
     )
 
-group = parser.add_mutually_exclusive_group()
-group.add_argument(
+mutex = parser.add_mutually_exclusive_group()
+mutex.add_argument(
         "-r",
         "--reverse",
         action="store_true",
         help="reverse trafo"
     )
-group.add_argument(
+mutex.add_argument(
         "-s",
         "--store",
         action="store_true",
