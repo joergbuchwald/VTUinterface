@@ -40,9 +40,10 @@ class VTUIO:
     two_d_planenormal : `int`
                  between 0 and 2, default: 2
     interpolation_backend : `str`
-                 scipy or vtk 
+                 scipy or vtk
     """
-    def __init__(self, filename, nneighbors=20, dim=3, one_d_axis=0, two_d_planenormal=2, interpolation_backend="scipy"):
+    def __init__(self, filename, nneighbors=20, dim=3, one_d_axis=0, two_d_planenormal=2,
+                                                        interpolation_backend="scipy"):
         self.filename = filename
         self.reader = vtk.vtkXMLUnstructuredGridReader()
         self.reader.SetFileName(self.filename)
@@ -232,7 +233,7 @@ class VTUIO:
             elif isinstance(fieldname, list):
                 data = {}
                 for field in fieldname:
-                    data[field] = self.get_data_scipy(nb, pts, field, 
+                    data[field] = self.get_data_scipy(nb, pts, field,
                             interpolation_method=interpolation_method)
                 for pt in pts:
                     for field in fieldname:
@@ -426,9 +427,10 @@ class PVDIO:
     two_d_planenormal : `int`
                   between 0 and 2, default: 2
     interpolation_backend : `str`
-                 scipy or vtk 
+                 scipy or vtk
     """
-    def __init__(self, filename, nneighbors=20, dim=3, one_d_axis=0, two_d_planenormal=2, interpolation_backend="scipy"):
+    def __init__(self, filename, nneighbors=20, dim=3, one_d_axis=0, two_d_planenormal=2,
+                                                            interpolation_backend="scipy"):
         self.folder, self.filename = os.path.split(filename)
         self.nneighbors = nneighbors
         self.timesteps = np.array([])
@@ -505,16 +507,16 @@ class PVDIO:
                 if isinstance(fieldname, str):
                     data = vtk_to_numpy(
                         vtu.get_data_vtk(pts, interpolation_method=interpolation_method).GetArray(fieldname))
-                    for i, pt in enumerate(pts):
-                        resp_t[pt].append(data[i])
+                    for j, pt in enumerate(pts):
+                        resp_t[pt].append(data[j])
                 elif isinstance(fieldname, list):
                     data = {}
                     vtkdata = vtu.get_data_vtk(pts, interpolation_method=interpolation_method)
                     for field in fieldname:
                         data[field] = vtk_to_numpy(vtkdata.GetArray(fieldname))
-                    for i, pt in enumerate(pts):
+                    for j, pt in enumerate(pts):
                         for field in fieldname:
-                            resp_t[pt][field].append(data[field][i])
+                            resp_t[pt][field].append(data[field][j])
         resp_t_array = {}
         for pt, field in resp_t.items():
             if isinstance(fieldname, str):
@@ -552,7 +554,7 @@ class PVDIO:
             timestep2 = 0.0
             for i, ts in enumerate(self.timesteps):
                 try:
-                    if (timestep > ts) and (timestep < self.timesteps[i+1]):
+                    if ts < timestep < self.timesteps[i+1]:
                         timestep1 = ts
                         timestep2 = self.timesteps[i+1]
                         filename1 = self.vtufilenames[i]
@@ -611,7 +613,7 @@ class PVDIO:
             timestep2 = 0.0
             for i, ts in enumerate(self.timesteps):
                 try:
-                    if (timestep > ts) and (timestep < self.timesteps[i+1]):
+                    if ts < timestep < self.timesteps[i+1]:
                         timestep1 = ts
                         timestep2 = self.timesteps[i+1]
                         filename1 = self.vtufilenames[i]
