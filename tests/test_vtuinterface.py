@@ -31,9 +31,9 @@ class TestiOGS(unittest.TestCase):
         vtufile = VTUinterface.VTUIO("fields.vtu", dim=2)
         vtufile.func_to_m_dim_field([fct,fct2], "field2","fields.vtu")
         vtufile = VTUinterface.VTUIO("fields.vtu", dim=2)
-        f1 = vtufile.get_point_data("field1", pts={'pt0':(0.75,0.0,0.0)})
+        f1 = vtufile.get_data("field1", pts={'pt0':(0.75,0.0,0.0)})
         self.assertAlmostEqual(f1['pt0'],7.5)
-        f2 = vtufile.get_point_data("field2", pts={'pt0':(0.25,0.25,0.0)})
+        f2 = vtufile.get_data("field2", pts={'pt0':(0.25,0.25,0.0)})
         self.assertAlmostEqual(f2['pt0'][1], -2.5)
         self.assertAlmostEqual(f2['pt0'][0], 2.5)
 
@@ -44,7 +44,7 @@ class TestiOGS(unittest.TestCase):
         for i, entry in enumerate(vtupflist):
             self.assertEqual(entry, pflist[i])
         pts = {'pt0': (0.33,0,0), 'pt1': (0.97,0,0)}
-        data = vtufile.get_point_data(pflist, pts=pts)
+        data = vtufile.get_data(pflist, pts=pts)
         for pt in pts:
             for i, field in enumerate(pflist):
                 self.assertAlmostEqual(float(data[pt][field]),(i+1)*pts[pt][0])
