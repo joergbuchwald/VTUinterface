@@ -52,6 +52,7 @@ class VTUIO:
         self.pdata = self.output.GetPointData()
         self.cdata = self.output.GetCellData()
         self.points = vtk_to_numpy(self.output.GetPoints().GetData())
+        self.cell_center_points = None
         self.dim = dim
         self.nneighbors = nneighbors
         if self.dim == 1:
@@ -63,11 +64,24 @@ class VTUIO:
             self.points = np.delete(self.points, two_d_planenormal, 1)
         self.interpolation_backend = interpolation_backend
 
-    def get_neighbors(self, points_interpol):
+    def get_cell_centers(self):
+        """
+        Method for obtaining cell center points
+        """
+        ccf = vtk.vtkCellCenters()
+        ccf.SetInputData(self.output)
+        ccf.VertexCellsOn()
+        ccf.Update()
+        self.cell_center_points = vtk_to_numpy(ccf.GetOutput().GetPoints().GetData())
+
+    def get_neighbors(self, points_interpol, data_type="point"):
         """
         Method for obtaining neighbor points for interpolation.
         """
-        df = pd.DataFrame(self.points)
+        if data_type == "cell":
+            self.get_cell_centers()
+        points = self.points if data_type == "point" else self.cell_center_points
+        df = pd.DataFrame(points)
         neighbors = {}
         if self.dim == 1:
             return neighbors
@@ -96,15 +110,16 @@ class VTUIO:
         return nearest
 
 
-    def get_data_scipy(self, neighbors, points_interpol, fieldname, interpolation_method="linear"):
+    def get_data_scipy(self, neighbors, points_interpol, fieldname, data_type="point", interpolation_method="linear"):
         """
         Get interpolated data for points_interpol using neighbor points.
         """
-        field = self.get_point_field(fieldname)
+        field = self.get_point_field(fieldname) if data_type == "point" else self.get_cell_field(fieldname)
+        points = self.points if data_type == "point" else self.cell_center_points
         resp = {}
         for i, (key, val) in enumerate(points_interpol.items()):
             if self.dim == 1:
-                data = pd.DataFrame(self.points, columns = ['x'])
+                data = pd.DataFrame(points, columns = ['x'])
                 data["y"] = field
                 data.sort_values(by = ['x'], inplace=True)
                 data.drop_duplicates(subset=['x'], inplace=True)
@@ -113,11 +128,11 @@ class VTUIO:
             elif self.dim == 2:
                 x, y = self.plane
                 grid_x, grid_y = np.array([[[val[x]]],[[val[y]]]])
-                resp[key] = griddata(self.points[neighbors[i]], field[neighbors[i]],
+                resp[key] = griddata(points[neighbors[i]], field[neighbors[i]],
                         (grid_x, grid_y), method=interpolation_method)[0][0]
             else:
                 grid_x, grid_y, grid_z = np.array([[[[val[0]]]], [[[val[1]]]], [[[val[2]]]]])
-                resp[key] = griddata(self.points[neighbors[i]], field[neighbors[i]],
+                resp[key] = griddata(points[neighbors[i]], field[neighbors[i]],
                         (grid_x, grid_y, grid_z), method=interpolation_method)[0][0][0]
         return resp
 
@@ -201,7 +216,7 @@ class VTUIO:
             fieldnames.append(self.pdata.GetArrayName(i))
         return fieldnames
 
-    def get_point_data(self, fieldname, pts = None, interpolation_method="linear"):
+    def get_data(self, fieldname, pts = None, data_type="point", interpolation_method="linear"):
         """
         Get data of field "fieldname" at all points specified in "pts".
 
@@ -227,18 +242,21 @@ class VTUIO:
         if self.interpolation_backend == "scipy":
             nb = self.get_neighbors(pts)
             if isinstance(fieldname, str):
-                data = self.get_data_scipy(nb, pts, fieldname, interpolation_method=interpolation_method)
+                data = self.get_data_scipy(nb, pts, fieldname, data_type=data_type,
+                        interpolation_method=interpolation_method)
                 for pt in pts:
                     resp[pt] = data[pt]
             elif isinstance(fieldname, list):
                 data = {}
                 for field in fieldname:
-                    data[field] = self.get_data_scipy(nb, pts, field,
+                    data[field] = self.get_data_scipy(nb, pts, field, data_type=data_type,
                             interpolation_method=interpolation_method)
                 for pt in pts:
                     for field in fieldname:
                         resp[pt][field] = data[field][pt]
         elif self.interpolation_backend == "vtk":
+            if data_type != "point":
+                raise RuntimeError("reading cell data is not working with vtk backend yet")
             if isinstance(fieldname, str):
                 resp_array = vtk_to_numpy(self.get_data_vtk(
                         pts, interpolation_method=interpolation_method).GetArray(fieldname))
@@ -276,7 +294,7 @@ class VTUIO:
         # convert into point dictionary
         for i, entry in enumerate(pointsetarray):
             pts['pt'+str(i)] = entry
-        resp = self.get_point_data(fieldname, pts=pts, interpolation_method=interpolation_method)
+        resp = self.get_data(fieldname, pts=pts, interpolation_method=interpolation_method)
         resp_list = []
         # convert point dictionary into list
         for i, entry in enumerate(pointsetarray):
@@ -457,7 +475,7 @@ class PVDIO:
                 self.timesteps = np.append(self.timesteps, [float(dataset.attrib['timestep'])])
                 self.vtufilenames.append(dataset.attrib['file'])
 
-    def read_time_series(self, fieldname, pts=None, interpolation_method="linear"):
+    def read_time_series(self, fieldname, pts=None, data_type="point", interpolation_method="linear"):
         """
         Return time series data of field "fieldname" at points pts.
         Also a list of fieldnames can be provided as "fieldname"
@@ -467,6 +485,8 @@ class PVDIO:
         fieldname : `str`
         pts : `dict`, optional
               default: {'pt0': (0.0,0.0,0.0)}
+        data_type : `str` optional
+              "point" or "cell"
         interpolation_method : `str`, optional
                                default: 'linear
         """
@@ -491,15 +511,17 @@ class PVDIO:
                     interpolation_backend=self.interpolation_backend)
             if self.interpolation_backend == "scipy":
                 if i == 0:
-                    nb = vtu.get_neighbors(pts)
+                    nb = vtu.get_neighbors(pts, data_type=data_type)
                 if isinstance(fieldname, str):
-                    data = vtu.get_data_scipy(nb, pts, fieldname, interpolation_method=interpolation_method)
+                    data = vtu.get_data_scipy(nb, pts, fieldname, data_type=data_type,
+                            interpolation_method=interpolation_method)
                     for pt in pts:
                         resp_t[pt].append(data[pt])
                 elif isinstance(fieldname, list):
                     data = {}
                     for field in fieldname:
-                        data[field] = vtu.get_data_scipy(nb, pts, field, interpolation_method=interpolation_method)
+                        data[field] = vtu.get_data_scipy(nb, pts, field, data_type=data_type,
+                                interpolation_method=interpolation_method)
                     for pt in pts:
                         for field in fieldname:
                             resp_t[pt][field].append(data[field][pt])
