@@ -173,9 +173,9 @@ global_base = np.matrix([global_ex, global_ey, global_ez])# note, base as row_ve
 
 # construct base from given slice direction or automatically if not given
 if auto_detect:
-    print("detecting slice orientation automatically")
     if reverse_flag:
         if stored_data_found:
+            print("reading original points from " + inputfile)
             # vectors from point with minimum of a coordinate to point with maximum
             dP = np.array([ org_points[np.argmax(org_points[:,0])] - org_points[np.argmin(org_points[:,0])], 
                             org_points[np.argmax(org_points[:,1])] - org_points[np.argmin(org_points[:,1])], 
@@ -184,6 +184,7 @@ if auto_detect:
             print("WARNING! Automatic detection for reverse trafo, but no stored data found. No output written.")
             sys.exit()
     else:  
+        print("detecting slice orientation automatically")
     # vectors from point with minimum of a coordinate to point with maximum
         dP = np.array([ points[np.argmax(points[:,0])] - points[np.argmin(points[:,0])], 
                         points[np.argmax(points[:,1])] - points[np.argmin(points[:,1])], 
