@@ -52,9 +52,11 @@ class VTUIO:
         self.pdata = self.output.GetPointData()
         self.cdata = self.output.GetCellData()
         self.points = vtk_to_numpy(self.output.GetPoints().GetData())
-        self.cell_center_points = None
+        self._cell_center_points = None
         self.dim = dim
         self.nneighbors = nneighbors
+        self.one_d_axis=one_d_axis
+        self.two_d_planenormal = two_d_planenormal
         if self.dim == 1:
             self.one_d_axis = one_d_axis
             self.points = self.points[:,one_d_axis]
@@ -64,22 +66,31 @@ class VTUIO:
             self.points = np.delete(self.points, two_d_planenormal, 1)
         self.interpolation_backend = interpolation_backend
 
-    def get_cell_centers(self):
+    @property
+    def cell_center_points(self):
         """
         Method for obtaining cell center points
         """
+        if self._cell_center_points is not None:
+            return self._cell_center_points
         ccf = vtk.vtkCellCenters()
         ccf.SetInputData(self.output)
         ccf.VertexCellsOn()
         ccf.Update()
-        self.cell_center_points = vtk_to_numpy(ccf.GetOutput().GetPoints().GetData())
+        self._cell_center_points = vtk_to_numpy(ccf.GetOutput().GetPoints().GetData())
+        if self.dim == 1:
+            self.one_d_axis = self.one_d_axis
+            self._cell_center_points = self._cell_center_points[:, self.one_d_axis]
+        if self.dim == 2:
+            self.plane = [0, 1, 2]
+            self.plane.pop(self.two_d_planenormal)
+            self._cell_center_points = np.delete(self._cell_center_points, self.two_d_planenormal, 1)
+        return self._cell_center_points
 
     def get_neighbors(self, points_interpol, data_type="point"):
         """
         Method for obtaining neighbor points for interpolation.
         """
-        if data_type == "cell":
-            self.get_cell_centers()
         points = self.points if data_type == "point" else self.cell_center_points
         df = pd.DataFrame(points)
         neighbors = {}
@@ -294,7 +305,7 @@ class VTUIO:
         # convert into point dictionary
         for i, entry in enumerate(pointsetarray):
             pts['pt'+str(i)] = entry
-        resp = self.get_data(fieldname, pts=pts, interpolation_method=interpolation_method)
+        resp = self.get_data(fieldname, pts=pts, data_type="point", interpolation_method=interpolation_method)
         resp_list = []
         # convert point dictionary into list
         for i, entry in enumerate(pointsetarray):
