@@ -537,6 +537,8 @@ class PVDIO:
                         for field in fieldname:
                             resp_t[pt][field].append(data[field][pt])
             elif self.interpolation_backend == "vtk":
+                if data_type != "point":
+                    raise RuntimeError("reading cell data is not working with vtk backend yet")
                 if isinstance(fieldname, str):
                     data = vtk_to_numpy(
                         vtu.get_data_vtk(pts, interpolation_method=interpolation_method).GetArray(fieldname))
