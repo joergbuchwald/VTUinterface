@@ -65,6 +65,18 @@ class TestiOGS(unittest.TestCase):
                 self.assertEqual(entry, 9.5)
             else:
                 self.assertAlmostEqual(entry, vtufile.points[i]*10)
+    def test_celldata_as_point_data(self):
+        vtufile = VTUinterface.VTUIO("examples/square_1e2_pcs_0_ts_1_t_1.000000.vtu", dim=2)
+        v = vtufile.get_cell_field_as_point_data("MaterialIDs")
+        self.assertEqual(v[0], 0.0)
+    def test_center_points(self):
+        vtufile = VTUinterface.VTUIO("examples/square_1e2_pcs_0_ts_1_t_1.000000.vtu", dim=2)
+        points = vtufile.cell_center_points
+        self.assertEqual(points[0], np.array([0.05, 0.05]))
+    def test_time_series_cell(self):
+        pvdfile = VTUinterface.PVDIO("examples/square_1e2_pcs_0.pvd", dim=2)
+        ts = pvdfile.read_time_series("MaterialIDs", pts={"pt0":[0.345,0.5231,0]}, data_type="cell")
+        self.assertEqual(ts["pt0"], np.array([0.0, 0.0]))
     def test_read_time_step(self):
         t1 = 0.5
         t2 = 1
