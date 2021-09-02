@@ -31,9 +31,9 @@ class TestiOGS(unittest.TestCase):
         vtufile = VTUinterface.VTUIO("fields.vtu", dim=2)
         vtufile.func_to_m_dim_field([fct,fct2], "field2","fields.vtu")
         vtufile = VTUinterface.VTUIO("fields.vtu", dim=2)
-        f1 = vtufile.get_point_data("field1", pts={'pt0':(0.75,0.0,0.0)})
+        f1 = vtufile.get_data("field1", pts={'pt0':(0.75,0.0,0.0)})
         self.assertAlmostEqual(f1['pt0'],7.5)
-        f2 = vtufile.get_point_data("field2", pts={'pt0':(0.25,0.25,0.0)})
+        f2 = vtufile.get_data("field2", pts={'pt0':(0.25,0.25,0.0)})
         self.assertAlmostEqual(f2['pt0'][1], -2.5)
         self.assertAlmostEqual(f2['pt0'][0], 2.5)
 
@@ -44,7 +44,7 @@ class TestiOGS(unittest.TestCase):
         for i, entry in enumerate(vtupflist):
             self.assertEqual(entry, pflist[i])
         pts = {'pt0': (0.33,0,0), 'pt1': (0.97,0,0)}
-        data = vtufile.get_point_data(pflist, pts=pts)
+        data = vtufile.get_data(pflist, pts=pts)
         for pt in pts:
             for i, field in enumerate(pflist):
                 self.assertAlmostEqual(float(data[pt][field]),(i+1)*pts[pt][0])
@@ -65,6 +65,18 @@ class TestiOGS(unittest.TestCase):
                 self.assertEqual(entry, 9.5)
             else:
                 self.assertAlmostEqual(entry, vtufile.points[i]*10)
+    def test_celldata_as_point_data(self):
+        vtufile = VTUinterface.VTUIO("examples/square_1e2_pcs_0_ts_1_t_1.000000.vtu", dim=2)
+        v = vtufile.get_cell_field_as_point_data("MaterialIDs")
+        self.assertEqual(v[0], 0.0)
+    def test_center_points(self):
+        vtufile = VTUinterface.VTUIO("examples/square_1e2_pcs_0_ts_1_t_1.000000.vtu", dim=2)
+        points = vtufile.cell_center_points
+        self.assertEqual(points[0].all(), np.array([0.05, 0.05]).all())
+    def test_time_series_cell(self):
+        pvdfile = VTUinterface.PVDIO("examples/square_1e2_pcs_0.pvd", dim=2)
+        ts = pvdfile.read_time_series("MaterialIDs", pts={"pt0":[0.345,0.5231,0]}, data_type="cell")
+        self.assertEqual(ts["pt0"].all(), np.array([0.0, 0.0]).all())
     def test_read_time_step(self):
         t1 = 0.5
         t2 = 1
