@@ -16,9 +16,7 @@ Note: VTUinterface requires the vtk wrapper for python. Alternatively, [a versio
 clone the repository and use pip to install the package
 
 ```shell
-# git clone https://github.com/joergbuchwald/VTUinterface.git
-# cd VTUinterface
-# pip install --user .
+# pip install [--user] https://github.com/joergbuchwald/VTUinterface/archive/refs/heads/master.zip
 ```
 
 ## 1. Documentation for VTUinterface
