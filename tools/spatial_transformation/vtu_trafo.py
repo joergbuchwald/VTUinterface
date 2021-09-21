@@ -183,6 +183,8 @@ if auto_detect:
             dP = np.array([ org_points[np.argmax(org_points[:,0])] - org_points[np.argmin(org_points[:,0])],
                             org_points[np.argmax(org_points[:,1])] - org_points[np.argmin(org_points[:,1])],
                             org_points[np.argmax(org_points[:,2])] - org_points[np.argmin(org_points[:,2])] ])
+            if args.set_2D_z:
+                print('Given 2D z-coordinate ignored, since original points found.') 
         else:
             print("WARNING! Automatic detection for reverse trafo, but no stored data found. No output written.")
             sys.exit()
@@ -218,17 +220,24 @@ spR, spMeanError = R.align_vectors(global_base, local_base)
 
 
 ###   APPLY TRANSFORMATION   ###
+if reverse_flag:
+    print("Variance of z-coordinate before reverse transformation from 2D to 3D is var(z)={} (should be zero)".format(np.var(points[:,2]))) # to indicate if there may be was a problem with the trafo
 
 # transform mesh points (nodes)
 if reverse_flag and auto_detect:
     points = org_points
 else:
     if (args.set_2D_z is not None) and reverse_flag:
+        print("Z-coordinate before reverse transformation from 2D to 3D were z={} (mean) and is set to z={}".format(np.mean(points[:,2]), args.set_2D_z))
         points[:,2] = args.set_2D_z   # set z coordinate in 2D, i.e. before trafo
-    points = spR.apply(points, inverse=reverse_flag)
+    points = spR.apply(points, inverse=reverse_flag)   # That is the TRANSFORMATION
     if (args.set_2D_z is not None) and not reverse_flag:
-        points[:,2] = args.set_2D_z   # set z coordinate in 2D, i.e. after trafo
+        print("Z-coordinate after transformation from 3D to 2D were z={} (mean) +/- {} (variance) and is set to z={}".format(np.mean(points[:,2]), np.var(points[:,2]), args.set_2D_z))
+        points[:,2] = args.set_2D_z   # set z coordinate in 2D, i.e. after trafo    
 vtk_points.SetData(numpy_to_vtk(points))
+
+if not reverse_flag:
+    print("Variance of z-coordinate after transformation from 3D to 2D is var(z)={} (should be zero)".format(np.var(points[:,2]))) # to indicate if there may be is a problem with the trafo
 
 if stored_data_found:
     vtk_pdata.RemoveArray(ORG_X)
