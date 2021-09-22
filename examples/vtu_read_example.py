@@ -30,7 +30,7 @@ pressure_field = data.get_point_field("pressure")
 print("pressure at points")
 print(pressure_field)
 
-point_data = data.get_point_data("pressure", pts={'pt0':(0.5,0.5,0.4)})
+point_data = data.get_data("pressure", pts={'pt0':(0.5,0.5,0.4)}, data_type="point")
 print(point_data)
 
 # contour plot
