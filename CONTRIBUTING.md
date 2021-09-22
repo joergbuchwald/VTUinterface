@@ -25,7 +25,7 @@ Open a [new issue](https://github.com/joergbuchwald/VTUinterface/issues)
 with your idea or suggestion and we'd love to discuss about it.
 
 
-## Do you want to enhance ogs6py or fix something?
+## Do you want to enhance VTUinterface or fix something?
 
 - Fork the repo on [GitHub](https://github.com/joergbuchwald/VTUinterface).
 - Add yourself to AUTHORS.md (if you want to).
