@@ -36,6 +36,13 @@ Although, a python package, VTUinterface is tested to work through PyCall under 
 [Basic Usage (julia)](https://github.com/joergbuchwald/VTUinterface/blob/master/README_julia.md)
 
 
+Unittests can be run via
+
+```shell
+# python tests/test_vtuinterface.py
+```
+from the project root directory.
+
 ## 3. FAQ/Troubleshooting
 
 
