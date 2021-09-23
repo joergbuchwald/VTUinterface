@@ -46,7 +46,10 @@ class VTUIO:
                                                         interpolation_backend="scipy"):
         self.filename = filename
         self.reader = vtk.vtkXMLUnstructuredGridReader()
-        self.reader.SetFileName(self.filename)
+        if os.path.isfile(self.filename) is True:
+            self.reader.SetFileName(self.filename)
+        else:
+            raise RuntimeError(f"File not found: {self.filename}")
         self.reader.Update()
         self.output = self.reader.GetOutput()
         self.pdata = self.output.GetPointData()
@@ -460,7 +463,10 @@ class PVDIO:
     """
     def __init__(self, filename, nneighbors=20, dim=3, one_d_axis=0, two_d_planenormal=2,
                                                             interpolation_backend="scipy"):
-        self.folder, self.filename = os.path.split(filename)
+        if os.path.isfile(filename) is True:
+            self.folder, self.filename = os.path.split(filename)
+        else:
+            raise RuntimeError(f"File not found: {filename}")
         self.nneighbors = nneighbors
         self.timesteps = np.array([])
         self.vtufilenames = []
