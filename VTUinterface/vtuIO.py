@@ -114,7 +114,7 @@ class VTUIO:
             neighbors[i] = df.sort_values(by=["r_" + str(i)]).head(self.nneighbors).index
         return neighbors
 
-    def get_nearest(self, points_interpol):
+    def get_nearest_points(self, points_interpol):
         """
         Return a dictionary with closest mesh points
 
@@ -126,6 +126,20 @@ class VTUIO:
         nearest = {}
         for i, (key, _) in enumerate(points_interpol.items()):
             nearest[key] = self.points[nb[i][0]]
+        return nearest
+
+    def get_nearest_indices(self, points_interpol):
+        """
+        Return a dictionary with closest mesh point indices
+
+        Parameters
+        ----------
+        points_interpol : `dict`
+        """
+        nb = self.get_neighbors(points_interpol)
+        nearest = {}
+        for i, (key, _) in enumerate(points_interpol.items()):
+            nearest[key] = nb[i][0]
         return nearest
 
 

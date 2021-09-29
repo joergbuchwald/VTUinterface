@@ -121,5 +121,19 @@ class TestiOGS(unittest.TestCase):
         p = f.read_time_series("pressure", {"pt0":(1.53,1.73,0)})
         self.assertAlmostEqual(p["pt0"].all(), np.array([  100000., 11214944.35401228]).all())
 
+    def test_nearest_points(self):
+        vtufile = VTUinterface.VTUIO("examples/square_1e2_pcs_0_ts_1_t_1.000000.vtu", dim=2)
+        pts = {"pt0": (0.07,0.07,0.0),"pt1": (0.02,0.02,0.0),"pt2":(0.02,0.07,0.0), "pt3": (0.07,0.02,0.0)}
+        points = vtufile.get_nearest_points(pts)
+        indices = vtufile.get_nearest_indices(pts)
+        self.assertEqual(indices["pt0"], 12)
+        self.assertEqual(indices["pt1"], 0)
+        self.assertEqual(indices["pt2"], 11)
+        self.assertEqual(indices["pt3"], 1)
+        self.assertEqual(points["pt0"].all(), np.array([0.1, 0.1]).all())
+        self.assertEqual(points["pt1"].all(), np.array([0.0, 0.0]).all())
+        self.assertEqual(points["pt2"].all(), np.array([0.0, 0.1]).all())
+        self.assertEqual(points["pt3"].all(), np.array([0.1, 0.0]).all())
+
 if __name__ == '__main__':
     unittest.main()
