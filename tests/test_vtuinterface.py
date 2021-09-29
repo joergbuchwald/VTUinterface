@@ -33,7 +33,25 @@ class TestiOGS(unittest.TestCase):
         for i, p in enumerate(pressure_xaxis_t1):
             self.assertAlmostEqual(y_pred[i],p)
 
-    def test_vtu_write_read(self):
+    def test_vtu_cell_func_write_read(self):
+        vtufile = VTUinterface.VTUIO("examples/square_1e2_pcs_0_ts_1_t_1.000000.vtu", dim=2)
+        field = vtufile.get_point_field("pressure")
+        fieldnew = 0.5*field
+        vtufile.write_field(fieldnew, "pressure_new","write_test.vtu")
+        vtufile = VTUinterface.VTUIO("write_test.vtu", dim=2)
+        def fct(x,y,z):
+            return x*10
+        def fct2(x,y,z):
+            return -y*10
+        vtufile.func_to_field(fct, "field1","write_test.vtu", cell=True)
+        vtufile = VTUinterface.VTUIO("write_test.vtu", dim=2)
+        vtufile.func_to_m_dim_field([fct,fct2], "field2","write_test.vtu", cell=True)
+        vtufile = VTUinterface.VTUIO("write_test.vtu", dim=2)
+        self.assertTrue("pressure_new" in vtufile.get_point_field_names())
+        self.assertTrue("field1" in vtufile.get_cell_field_names())
+        self.assertTrue("field2" in vtufile.get_cell_field_names())
+
+    def test_vtu_func_write_read(self):
         vtufile = VTUinterface.VTUIO("examples/square_1e2_pcs_0_ts_1_t_1.000000.vtu", dim=2)
         def fct(x,y,z):
             return x*10
