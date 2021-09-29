@@ -85,6 +85,11 @@ class TestiOGS(unittest.TestCase):
         field_t1 = pvdfile.read_time_step(t1, "pressure")
         for i, entry in enumerate(field_t1):
             self.assertAlmostEqual(0.5*field_last_step[i], entry)
+    def test_read_pvtu(self):
+        f = VTUinterface.PVDIO("examples/run_0_results.pvd", dim=2)
+        f.clear_pvd_rel_path(write=False)
+        p = f.read_time_series("pressure", {"pt0":(1.53,1.73,0)})
+        self.assertAlmostEqual(p["pt0"].all(), np.array([  100000., 11214944.35401228]).all())
 
 if __name__ == '__main__':
     unittest.main()

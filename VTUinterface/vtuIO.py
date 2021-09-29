@@ -45,7 +45,12 @@ class VTUIO:
     def __init__(self, filename, nneighbors=20, dim=3, one_d_axis=0, two_d_planenormal=2,
                                                         interpolation_backend="scipy"):
         self.filename = filename
-        self.reader = vtk.vtkXMLUnstructuredGridReader()
+        if filename.split(".")[-1] == "vtu":
+            self.reader = vtk.vtkXMLUnstructuredGridReader()
+        elif filename.split(".")[-1] == "pvtu":
+            self.reader = vtk.vtkXMLPUnstructuredGridReader()
+        else:
+            raise RuntimeError(f"Did not recognize file extension")
         if os.path.isfile(self.filename) is True:
             self.reader.SetFileName(self.filename)
         else:
@@ -518,10 +523,7 @@ class PVDIO:
                 for field in fieldname:
                     resp_t[pt][field] = []
         for i, filename in enumerate(self.vtufilenames):
-            # quick and dirty trick for serial pvtu files:
-            # TODO: real handling of parallel files
-            fn_new = filename.replace(".pvtu", "_0.vtu")
-            vtu = VTUIO(os.path.join(self.folder,fn_new),
+            vtu = VTUIO(os.path.join(self.folder, filename),
                     nneighbors=self.nneighbors, dim=self.dim,
                     one_d_axis=self.one_d_axis,
                     two_d_planenormal=self.two_d_planenormal,
@@ -680,9 +682,13 @@ class PVDIO:
                 field = field1 + fieldslope * (timestep-timestep1)
         return field
 
-    def clear_pvd_rel_path(self):
+    def clear_pvd_rel_path(self, write=True):
         """
         Delete relative directory paths in the vtu filenames of the PVD file.
+
+        Parameters
+        ----------
+        write : `bool`
         """
         xpath="./Collection/DataSet"
         tree = ET.parse(self.filename)
@@ -692,7 +698,8 @@ class PVDIO:
             filename = tag.get("file")
             filename_new = filename.split("/")[-1]
             tag.set("file", filename_new)
-        tree.write(self.filename,
+        if write is True:
+            tree.write(self.filename,
                             encoding="ISO-8859-1",
                             xml_declaration=True,
                             pretty_print=True)

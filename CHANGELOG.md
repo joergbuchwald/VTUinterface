@@ -7,6 +7,7 @@ All notable changes to **VTUinterface** will be documented in this file.
 ### Changes
 * new tool that enables spatial transformation of slices
 * more functionalities to read and interpolate cell data based on cell center points
+* VTUinterface is now able to read pvtu files
 
 ## [0.68]
 

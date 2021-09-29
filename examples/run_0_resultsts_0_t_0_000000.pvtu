@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<VTKFile type="PUnstructuredGrid" version="1.0" byte_order="LittleEndian" header_type="UInt64" compressor="vtkZLibDataCompressor">
+  <PUnstructuredGrid GhostLevel="1">
+    <FieldData>
+      <DataArray type="Int8" Name="OGS_VERSION" NumberOfTuples="20" format="binary" RangeMin="45" RangeMax="103">
+        AQAAAAAAAAAAgAAAAAAAABQAAAAAAAAAHAAAAAAAAAA=eF4z0zPWM9I1MzfXTTdLTkk0SUu0NAMAMMwFJQ==
+      </DataArray>
+    </FieldData>
+    <PPointData>
+      <PDataArray type="Float64" Name="displacement" NumberOfComponents="2"/>
+      <PDataArray type="Float64" Name="epsilon" NumberOfComponents="4"/>
+      <PDataArray type="Float64" Name="pf-ic"/>
+      <PDataArray type="Float64" Name="phasefield"/>
+      <PDataArray type="Float64" Name="pressure"/>
+      <PDataArray type="Float64" Name="sigma" NumberOfComponents="4"/>
+    </PPointData>
+    <PCellData>
+      <PDataArray type="Float64" Name="cum_grad_d"/>
+      <PDataArray type="Float64" Name="damage"/>
+      <PDataArray type="Float64" Name="frac_velocity" NumberOfComponents="2"/>
+      <PDataArray type="Float64" Name="grad_damage" NumberOfComponents="2"/>
+      <PDataArray type="Float64" Name="shear_disp"/>
+      <PDataArray type="Float64" Name="u_dot_grad_d"/>
+      <PDataArray type="Float64" Name="u_dot_m"/>
+      <PDataArray type="UInt8" Name="vtkGhostType"/>
+      <PDataArray type="Float64" Name="width"/>
+      <PDataArray type="Float64" Name="width_nl_prev"/>
+      <PDataArray type="Float64" Name="width_prev"/>
+    </PCellData>
+    <PPoints>
+      <PDataArray type="Float64" Name="Points" NumberOfComponents="3"/>
+    </PPoints>
+    <Piece Source="run_0_resultsts_0_t_0_000000_0.vtu"/>
+    <Piece Source="run_0_resultsts_0_t_0_000000_1.vtu"/>
+    <Piece Source="run_0_resultsts_0_t_0_000000_2.vtu"/>
+    <Piece Source="run_0_resultsts_0_t_0_000000_3.vtu"/>
+    <Piece Source="run_0_resultsts_0_t_0_000000_4.vtu"/>
+    <Piece Source="run_0_resultsts_0_t_0_000000_5.vtu"/>
+  </PUnstructuredGrid>
+</VTKFile>
