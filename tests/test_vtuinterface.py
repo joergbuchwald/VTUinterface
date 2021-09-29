@@ -12,6 +12,18 @@ class TestiOGS(unittest.TestCase):
         self.assertAlmostEqual(pressure_interpolation['pt0'][-1],0.5)
         self.assertAlmostEqual(pressure_interpolation['pt1'][-1],-0.5)
 
+    def test_pvd_read_vtk(self):
+        pvdfile = VTUinterface.PVDIO("examples/square_1e2_pcs_0.pvd", dim=2, interpolation_backend="vtk")
+        time = pvdfile.timesteps
+        selected_points = {'pt0': (0.25, 0.5, 0.0), 'pt1': (0.75, 0.5, 0.0)}
+        pressure_interpolation_v = pvdfile.read_time_series('pressure', selected_points, interpolation_method="voronoi")
+        # not equal to test test_pvd_read():
+        self.assertAlmostEqual(pressure_interpolation_v['pt0'][-1],0.6)
+        self.assertAlmostEqual(pressure_interpolation_v['pt1'][-1],-0.6)
+        pressure_interpolation_s = pvdfile.read_time_series('pressure', selected_points, interpolation_method="shepard")
+        self.assertAlmostEqual(pressure_interpolation_s['pt0'][-1], 0.41946054)
+        self.assertAlmostEqual(pressure_interpolation_s['pt1'][-1],-0.41946054)
+
     def test_point_set_read(self):
         t = 0.5
         pvdfile = VTUinterface.PVDIO("examples/square_1e2_pcs_0.pvd", dim=2)
