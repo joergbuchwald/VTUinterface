@@ -537,6 +537,38 @@ class PVDIO:
         self.two_d_planenormal = two_d_planenormal
         self.interpolation_backend = interpolation_backend
 
+    def delete_point_field(self, fieldnames):
+        """
+        delete point field(s) and write data to disk
+
+        Parameters
+        ----------
+        fieldnames : `str` or `list`
+        """
+        for filename in self.vtufilenames:
+            vtu = VTUIO(os.path.join(self.folder, filename),
+                    nneighbors=self.nneighbors, dim=self.dim,
+                    one_d_axis=self.one_d_axis,
+                    two_d_planenormal=self.two_d_planenormal,
+                    interpolation_backend=self.interpolation_backend)
+            vtu.delete_point_field(fieldnames, filename)
+
+    def delete_cell_field(self, fieldnames):
+        """
+        delete cell field(s) and write data to disk
+
+        Parameters
+        ----------
+        fieldnames : `str` or `list`
+        """
+        for filename in self.vtufilenames:
+            vtu = VTUIO(os.path.join(self.folder, filename),
+                    nneighbors=self.nneighbors, dim=self.dim,
+                    one_d_axis=self.one_d_axis,
+                    two_d_planenormal=self.two_d_planenormal,
+                    interpolation_backend=self.interpolation_backend)
+            vtu.delete_cell_field(fieldnames, filename)
+
     def read_pvd(self, filename):
         """
         Read in PVD file
