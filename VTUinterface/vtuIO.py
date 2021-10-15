@@ -443,6 +443,48 @@ class VTUIO:
         writer.SetInputData(self.output)
         writer.Write()
 
+    def delete_point_field(self, fieldnames, ofilename):
+        """
+        delete point field(s) and write data to disk
+
+        Parameters
+        ----------
+        fieldnames : `str` or `list`
+        ofilename : `str`
+        """
+        if isinstance(fieldnames, str):
+            self.pdata.RemoveArray(fieldnames)
+        elif isinstance(fieldnames, list):
+            for fieldname in fieldnames:
+                self.pdata.RemoveArray(fieldname)
+        else:
+            raise TypeError("Fieldnames has the wrong type. Please provide a list or string.")
+        writer = vtk.vtkXMLUnstructuredGridWriter()
+        writer.SetFileName(ofilename)
+        writer.SetInputData(self.output)
+        writer.Write()
+
+    def delete_cell_field(self, fieldnames, ofilename):
+        """
+        delete cell field(s) and write data to disk
+
+        Parameters
+        ----------
+        fieldnames : `str` or `list`
+        ofilename : `str`
+        """
+        if isinstance(fieldnames, str):
+            self.cdata.RemoveArray(fieldnames)
+        elif isinstance(fieldnames, list):
+            for fieldname in fieldnames:
+                self.cdata.RemoveArray(fieldname)
+        else:
+            raise TypeError("Fieldnames has the wrong type. Please provide a list or string.")
+        writer = vtk.vtkXMLUnstructuredGridWriter()
+        writer.SetFileName(ofilename)
+        writer.SetInputData(self.output)
+        writer.Write()
+
     def write_field(self, field, fieldname, ofilename):
         """
         Write a field (numpy array of correct size)
