@@ -34,10 +34,10 @@ t1 = 0.2543
 t2 = 0.9
 
 # read and interpolate from vtu-files listed in pvd
-pressure_xaxis_t1 = pvdfile.read_point_set_data(t1, 'pressure', pointsetarray=xaxis)
-pressure_diagonal_t1 = pvdfile.read_point_set_data(t1, 'pressure', pointsetarray=diagonal)
-pressure_xaxis_t2 = pvdfile.read_point_set_data(t2, 'pressure', pointsetarray=xaxis)
-pressure_diagonal_t2 = pvdfile.read_point_set_data(t2, 'pressure', pointsetarray=diagonal)
+pressure_xaxis_t1 = pvdfile.read_set_data(t1, 'pressure', data_type="point", pointsetarray=xaxis)
+pressure_diagonal_t1 = pvdfile.read_set_data(t1, 'pressure', data_type="point", pointsetarray=diagonal)
+pressure_xaxis_t2 = pvdfile.read_set_data(t2, 'pressure', data_type="point", pointsetarray=xaxis)
+pressure_diagonal_t2 = pvdfile.read_set_data(t2, 'pressure', data_type="point", pointsetarray=diagonal)
 
 # convert lists to array:
 r_x = np.array(xaxis)[:,0]

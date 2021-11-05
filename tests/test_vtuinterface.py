@@ -29,7 +29,7 @@ class TestiOGS(unittest.TestCase):
         pvdfile = VTUinterface.PVDIO("examples/square_1e2_pcs_0.pvd", dim=2)
         xaxis =  [(i,0,0) for i in np.linspace(start=0.0, stop=1.0, num=100)]
         y_pred = np.linspace(start=0.5, stop=-0.5, num=100)
-        pressure_xaxis_t1 = pvdfile.read_point_set_data(t, 'pressure', pointsetarray=xaxis)
+        pressure_xaxis_t1 = pvdfile.read_set_data(t, 'pressure', data_type="point", pointsetarray=xaxis)
         for i, p in enumerate(pressure_xaxis_t1):
             self.assertAlmostEqual(y_pred[i],p)
 

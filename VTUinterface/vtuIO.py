@@ -273,7 +273,7 @@ class VTUIO:
                     resp[pt][field] = []
         # TODO: move following part into separate method (similar code in PVDIO)
         if self.interpolation_backend == "scipy":
-            nb = self.get_neighbors(pts)
+            nb = self.get_neighbors(pts, data_type=data_type)
             if isinstance(fieldname, str):
                 data = self.get_data_scipy(nb, pts, fieldname, data_type=data_type,
                         interpolation_method=interpolation_method)
@@ -309,7 +309,7 @@ class VTUIO:
         return resp
 
 
-    def get_point_set_data(self, fieldname, pointsetarray=None, interpolation_method="linear"):
+    def get_set_data(self, fieldname, pointsetarray=None, data_type="point", interpolation_method="linear"):
         """
         Get data specified in fieldname at all points specified in "pointsetarray".
 
@@ -327,7 +327,7 @@ class VTUIO:
         # convert into point dictionary
         for i, entry in enumerate(pointsetarray):
             pts['pt'+str(i)] = entry
-        resp = self.get_data(fieldname, pts=pts, data_type="point", interpolation_method=interpolation_method)
+        resp = self.get_data(fieldname, pts=pts, data_type=data_type, interpolation_method=interpolation_method)
         resp_list = []
         # convert point dictionary into list
         for i, entry in enumerate(pointsetarray):
@@ -711,7 +711,7 @@ class PVDIO:
                 field = field1 + fieldslope * (timestep-timestep1)
         return field
 
-    def read_point_set_data(self, timestep, fieldname, pointsetarray = None, interpolation_method="linear"):
+    def read_set_data(self, timestep, fieldname, pointsetarray = None, data_type="point", interpolation_method="linear"):
         """
         Get data of field "fieldname" at time "timestep" alon a given "pointsetarray".
 
@@ -736,7 +736,7 @@ class PVDIO:
                     one_d_axis=self.one_d_axis,
                     two_d_planenormal=self.two_d_planenormal,
                     interpolation_backend=self.interpolation_backend)
-            field = vtu.get_point_set_data(fieldname, pointsetarray, interpolation_method=interpolation_method)
+            field = vtu.get_set_data(fieldname, pointsetarray, data_type=data_type, interpolation_method=interpolation_method)
         else:
             filename1 = None
             filename2 = None
@@ -764,8 +764,8 @@ class PVDIO:
                     one_d_axis=self.one_d_axis,
                     two_d_planenormal=self.two_d_planenormal,
                     interpolation_backend=self.interpolation_backend)
-                field1 = vtu1.get_point_set_data(fieldname, pointsetarray, interpolation_method=interpolation_method)
-                field2 = vtu2.get_point_set_data(fieldname, pointsetarray, interpolation_method=interpolation_method)
+                field1 = vtu1.get_set_data(fieldname, pointsetarray, data_type=data_type, interpolation_method=interpolation_method)
+                field2 = vtu2.get_set_data(fieldname, pointsetarray, data_type=data_type, interpolation_method=interpolation_method)
                 fieldslope = (field2-field1)/(timestep2-timestep1)
                 field = field1 + fieldslope * (timestep-timestep1)
         return field
