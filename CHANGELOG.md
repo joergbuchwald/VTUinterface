@@ -2,11 +2,13 @@
 
 All notable changes to **VTUinterface** will be documented in this file.
 
-## [0.682]
+## [0.69]
 
 ### Changes
 * VTUinterface is now able to read pvtu files
 * add methods for returning neighbor points and their indices
+* add methods to interpolate cell data based on cell midpoints
+* add methods for deleting point/cell data
 
 ## [0.681]
 
