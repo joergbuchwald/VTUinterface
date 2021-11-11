@@ -56,10 +56,16 @@ class VTUIO:
         else:
             raise RuntimeError(f"File not found: {self.filename}")
         self.reader.Update()
-        self.output = self.reader.GetOutput()
-        self.pdata = self.output.GetPointData()
-        self.cdata = self.output.GetCellData()
-        self.points = vtk_to_numpy(self.output.GetPoints().GetData())
+        try:
+            self.output = self.reader.GetOutput()
+            self.pdata = self.output.GetPointData()
+            self.cdata = self.output.GetCellData()
+        except AttributeError:
+            print(f"File {self.filename} does not contain any data")
+        try:
+            self.points = vtk_to_numpy(self.output.GetPoints().GetData())
+        except AttributeError:
+            print(f"File {self.filename} does not contain any points")
         self._cell_center_points = None
         self.dim = dim
         self.nneighbors = nneighbors
