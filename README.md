@@ -1,4 +1,4 @@
-[![DOI](https://zenodo.org/badge/282728412.svg)](https://zenodo.org/badge/latestdoi/282728412) [![VTUinterface](https://github.com/joergbuchwald/VTUinterface/actions/workflows/python-package.yml/badge.svg)](https://github.com/joergbuchwald/VTUinterface/actions/workflows/python-package.yml) [![codecov](https://codecov.io/gh/joergbuchwald/VTUinterface/branch/master/graph/badge.svg?token=9E1OJIJI8Z)](https://codecov.io/gh/joergbuchwald/VTUinterface)
+[![DOI](https://zenodo.org/badge/282728412.svg)](https://zenodo.org/badge/latestdoi/282728412) [![VTUinterface](https://github.com/joergbuchwald/VTUinterface/actions/workflows/python-package.yml/badge.svg)](https://github.com/joergbuchwald/VTUinterface/actions/workflows/python-package.yml) [![codecov](https://codecov.io/gh/joergbuchwald/VTUinterface/branch/master/graph/badge.svg?token=9E1OJIJI8Z)](https://codecov.io/gh/joergbuchwald/VTUinterface) [![DOI](https://joss.theoj.org/papers/10.21105/joss.03673/status.svg)](https://doi.org/10.21105/joss.03673)
 
 
 # VTUinterface
