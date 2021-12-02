@@ -664,18 +664,18 @@ class PVDIO:
                     resp_t_array[pt][field_] = np.array(fieldarray)
         return resp_t_array
 
-    def read_time_step(self, timestep, fieldname):
+    def read_time_slice(self, time, fieldname):
         """
-        Print field "fieldname" at time "timestep".
+        Print field "fieldname" at time "time".
 
         Parameters
         ----------
-        timestep : `int`
+        time : `float`
         fieldname : `str`
         """
         filename = None
         for i, ts in enumerate(self.timesteps):
-            if timestep == ts:
+            if time == ts:
                 filename = self.vtufilenames[i]
         if not filename is None:
             vtu = VTUIO(os.path.join(self.folder,filename),
@@ -687,19 +687,19 @@ class PVDIO:
         else:
             filename1 = None
             filename2 = None
-            timestep1 = 0.0
-            timestep2 = 0.0
+            time1 = 0.0
+            time2 = 0.0
             for i, ts in enumerate(self.timesteps):
                 try:
-                    if ts < timestep < self.timesteps[i+1]:
-                        timestep1 = ts
-                        timestep2 = self.timesteps[i+1]
+                    if ts < time < self.timesteps[i+1]:
+                        time1 = ts
+                        time2 = self.timesteps[i+1]
                         filename1 = self.vtufilenames[i]
                         filename2 = self.vtufilenames[i+1]
                 except IndexError:
-                    print("time step is out of range")
+                    print("time is out of range")
             if (filename1 is None) or (filename2 is None):
-                print("time step is out of range")
+                print("time is out of range")
             else:
                 vtu1 = VTUIO(os.path.join(self.folder,filename1),
                         nneighbors=self.nneighbors, dim=self.dim,
@@ -713,17 +713,17 @@ class PVDIO:
                         interpolation_backend=self.interpolation_backend)
                 field1 = vtu1.get_point_field(fieldname)
                 field2 = vtu2.get_point_field(fieldname)
-                fieldslope = (field2-field1)/(timestep2-timestep1)
-                field = field1 + fieldslope * (timestep-timestep1)
+                fieldslope = (field2-field1)/(time2-time1)
+                field = field1 + fieldslope * (time-time1)
         return field
 
-    def read_set_data(self, timestep, fieldname, pointsetarray = None, data_type="point", interpolation_method="linear"):
+    def read_set_data(self, time, fieldname, pointsetarray = None, data_type="point", interpolation_method="linear"):
         """
-        Get data of field "fieldname" at time "timestep" alon a given "pointsetarray".
+        Get data of field "fieldname" at time "time" alon a given "pointsetarray".
 
         Parameters
         ----------
-        timestep : `int`
+        time : `float`
         fieldname : `str`
         pointsetarray : `array`, optional
                         default: [(0,0,0)]
@@ -734,7 +734,7 @@ class PVDIO:
             pointsetarray = [(0,0,0)]
         filename = None
         for i, ts in enumerate(self.timesteps):
-            if timestep == ts:
+            if time == ts:
                 filename = self.vtufilenames[i]
         if not filename is None:
             vtu = VTUIO(os.path.join(self.folder,filename),
@@ -746,19 +746,19 @@ class PVDIO:
         else:
             filename1 = None
             filename2 = None
-            timestep1 = 0.0
-            timestep2 = 0.0
+            time1 = 0.0
+            time2 = 0.0
             for i, ts in enumerate(self.timesteps):
                 try:
-                    if ts < timestep < self.timesteps[i+1]:
-                        timestep1 = ts
-                        timestep2 = self.timesteps[i+1]
+                    if ts < time < self.timesteps[i+1]:
+                        time1 = ts
+                        time2 = self.timesteps[i+1]
                         filename1 = self.vtufilenames[i]
                         filename2 = self.vtufilenames[i+1]
                 except IndexError:
-                    print("time step is out of range")
+                    print("time is out of range")
             if (filename1 is None) or (filename2 is None):
-                print("time step is out of range")
+                print("time is out of range")
             else:
                 vtu1 = VTUIO(os.path.join(self.folder,filename1),
                     nneighbors=self.nneighbors, dim=self.dim,
@@ -772,8 +772,8 @@ class PVDIO:
                     interpolation_backend=self.interpolation_backend)
                 field1 = vtu1.get_set_data(fieldname, pointsetarray, data_type=data_type, interpolation_method=interpolation_method)
                 field2 = vtu2.get_set_data(fieldname, pointsetarray, data_type=data_type, interpolation_method=interpolation_method)
-                fieldslope = (field2-field1)/(timestep2-timestep1)
-                field = field1 + fieldslope * (timestep-timestep1)
+                fieldslope = (field2-field1)/(time2-time1)
+                field = field1 + fieldslope * (time-time1)
         return field
 
     def clear_pvd_rel_path(self, write=True):
