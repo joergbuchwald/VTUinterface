@@ -111,8 +111,8 @@ class TestiOGS(unittest.TestCase):
         t1 = 0.5
         t2 = 1
         pvdfile = VTUinterface.PVDIO("examples/square_1e2_pcs_0.pvd", dim=2)
-        field_last_step = pvdfile.read_time_step(t2, "pressure")
-        field_t1 = pvdfile.read_time_step(t1, "pressure")
+        field_last_step = pvdfile.read_time_slice(t2, "pressure")
+        field_t1 = pvdfile.read_time_slice(t1, "pressure")
         for i, entry in enumerate(field_t1):
             self.assertAlmostEqual(0.5*field_last_step[i], entry)
     def test_read_pvtu(self):
