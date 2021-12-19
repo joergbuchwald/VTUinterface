@@ -1,0 +1,10 @@
+cff-version: 1.1.0
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: Buchwald
+    given-names: Jörg
+    orcid:  https://orcid.org/0000-0001-5174-3603
+title: joergbuchwald/VTUinterface: 
+version: v0.69
+date-released: 2017-12-18
+doi: 10.21105/joss.03673
