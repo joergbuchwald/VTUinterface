@@ -372,7 +372,7 @@ class VTUIO:
         resp_array = np.array(resp_list)
         return resp_array
 
-    def func_to_field(self, function, fieldname, ofilename, cell=False):
+    def func_to_field(self, function, fieldname, ofilename, cell=False, writefile=True):
         """
         Add a field to the vtu file (which will be saved directly as "ofilename"
         by providing a three argument function(x,y,z)
@@ -406,12 +406,13 @@ class VTUIO:
             cells_orig = self.output.GetCellData()
             cells_orig.AddArray(array)
             self.pdata.RemoveArray(fieldname)
-        writer = vtk.vtkXMLUnstructuredGridWriter()
-        writer.SetFileName(ofilename)
-        writer.SetInputData(self.output)
-        writer.Write()
+        if writefile is True:
+            writer = vtk.vtkXMLUnstructuredGridWriter()
+            writer.SetFileName(ofilename)
+            writer.SetInputData(self.output)
+            writer.Write()
 
-    def func_to_m_dim_field(self, functionarray, fieldname, ofilename, cell=False):
+    def func_to_m_dim_field(self, functionarray, fieldname, ofilename, cell=False, writefile=True):
         """
         Add a multidimensional field to the vtu file (which will be saved directly as "ofilename"
         by providing am array of three argument functions.
@@ -453,12 +454,13 @@ class VTUIO:
             cells_orig = self.output.GetCellData()
             cells_orig.AddArray(array)
             self.pdata.RemoveArray(fieldname)
-        writer = vtk.vtkXMLUnstructuredGridWriter()
-        writer.SetFileName(ofilename)
-        writer.SetInputData(self.output)
-        writer.Write()
+        if writefile is True:
+            writer = vtk.vtkXMLUnstructuredGridWriter()
+            writer.SetFileName(ofilename)
+            writer.SetInputData(self.output)
+            writer.Write()
 
-    def point_data_to_cell_data(self, fieldname, ofilename):
+    def point_data_to_cell_data(self, fieldname, ofilename, writefile=True):
         """
         convert pointdata to cell data of field "fieldname"
 
@@ -475,12 +477,13 @@ class VTUIO:
         array =  cells.GetArray(fieldname)
         cells_orig = self.output.GetCellData()
         cells_orig.AddArray(array)
-        writer = vtk.vtkXMLUnstructuredGridWriter()
-        writer.SetFileName(ofilename)
-        writer.SetInputData(self.output)
-        writer.Write()
+        if writefile is True:
+            writer = vtk.vtkXMLUnstructuredGridWriter()
+            writer.SetFileName(ofilename)
+            writer.SetInputData(self.output)
+            writer.Write()
 
-    def delete_point_field(self, fieldnames, ofilename):
+    def delete_point_field(self, fieldnames, ofilename, writefile=True):
         """
         delete point field(s) and write data to disk
 
@@ -496,12 +499,13 @@ class VTUIO:
                 self.pdata.RemoveArray(fieldname)
         else:
             raise TypeError("Fieldnames has the wrong type. Please provide a list or string.")
-        writer = vtk.vtkXMLUnstructuredGridWriter()
-        writer.SetFileName(ofilename)
-        writer.SetInputData(self.output)
-        writer.Write()
+        if writefile is True:
+            writer = vtk.vtkXMLUnstructuredGridWriter()
+            writer.SetFileName(ofilename)
+            writer.SetInputData(self.output)
+            writer.Write()
 
-    def delete_cell_field(self, fieldnames, ofilename):
+    def delete_cell_field(self, fieldnames, ofilename, writefile=True):
         """
         delete cell field(s) and write data to disk
 
@@ -517,12 +521,13 @@ class VTUIO:
                 self.cdata.RemoveArray(fieldname)
         else:
             raise TypeError("Fieldnames has the wrong type. Please provide a list or string.")
-        writer = vtk.vtkXMLUnstructuredGridWriter()
-        writer.SetFileName(ofilename)
-        writer.SetInputData(self.output)
-        writer.Write()
+        if writefile is True:
+            writer = vtk.vtkXMLUnstructuredGridWriter()
+            writer.SetFileName(ofilename)
+            writer.SetInputData(self.output)
+            writer.Write()
 
-    def write_field(self, field, fieldname, ofilename):
+    def write_field(self, field, fieldname, ofilename, writefile=True):
         """
         Write a field (numpy array of correct size)
         to field "fieldname" as file "ofilename".
@@ -536,8 +541,22 @@ class VTUIO:
         field_vtk = numpy_to_vtk(field)
         r = self.pdata.AddArray(field_vtk)
         self.pdata.GetArray(r).SetName(fieldname)
+        if writefile is True:
+            writer = vtk.vtkXMLUnstructuredGridWriter()
+            writer.SetFileName(ofilename)
+            writer.SetInputData(self.output)
+            writer.Write()
+
+    def write(self, filename):
+        """
+        Write data as file "filename".
+
+        Parameters
+        ----------
+        filename : `str`
+        """
         writer = vtk.vtkXMLUnstructuredGridWriter()
-        writer.SetFileName(ofilename)
+        writer.SetFileName(filename)
         writer.SetInputData(self.output)
         writer.Write()
 
