@@ -527,7 +527,7 @@ class VTUIO:
             writer.SetInputData(self.output)
             writer.Write()
 
-    def write_field(self, field, fieldname, ofilename, writefile=True):
+    def write_point_field(self, field, fieldname, ofilename, writefile=True):
         """
         Write a field (numpy array of correct size)
         to field "fieldname" as file "ofilename".
@@ -541,6 +541,26 @@ class VTUIO:
         field_vtk = numpy_to_vtk(field)
         r = self.pdata.AddArray(field_vtk)
         self.pdata.GetArray(r).SetName(fieldname)
+        if writefile is True:
+            writer = vtk.vtkXMLUnstructuredGridWriter()
+            writer.SetFileName(ofilename)
+            writer.SetInputData(self.output)
+            writer.Write()
+
+    def write_cell_field(self, field, fieldname, ofilename, writefile=True):
+        """
+        Write a field (numpy array of correct size)
+        to field "fieldname" as file "ofilename".
+
+        Parameters
+        ----------
+        field : `array`
+        fieldname : `str`
+        ofilename : `str`
+        """
+        field_vtk = numpy_to_vtk(field)
+        r = self.cdata.AddArray(field_vtk)
+        self.cdata.GetArray(r).SetName(fieldname)
         if writefile is True:
             writer = vtk.vtkXMLUnstructuredGridWriter()
             writer.SetFileName(ofilename)

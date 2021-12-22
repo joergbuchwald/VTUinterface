@@ -37,7 +37,7 @@ class TestiOGS(unittest.TestCase):
         vtufile = VTUinterface.VTUIO("examples/square_1e2_pcs_0_ts_1_t_1.000000.vtu", dim=2)
         field = vtufile.get_point_field("pressure")
         fieldnew = 0.5*field
-        vtufile.write_field(fieldnew, "pressure_new","write_test.vtu")
+        vtufile.write_point_field(fieldnew, "pressure_new","write_test.vtu")
         vtufile = VTUinterface.VTUIO("write_test.vtu", dim=2)
         def fct(x,y,z):
             return x*10
