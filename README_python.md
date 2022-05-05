@@ -304,10 +304,10 @@ t2 = 0.9
 
 
 ```python
-pressure_xaxis_t1 = pvdfile.read_point_set_data(t1, "pressure", pointsetarray=xaxis)
-pressure_diagonal_t1 = pvdfile.read_point_set_data(t1, "pressure", pointsetarray=diagonal)
-pressure_xaxis_t2 = pvdfile.read_point_set_data(t2, "pressure", pointsetarray=xaxis)
-pressure_diagonal_t2 = pvdfile.read_point_set_data(t2, "pressure", pointsetarray=diagonal)
+pressure_xaxis_t1 = pvdfile.read_set_data(t1, "pressure", pointsetarray=xaxis)
+pressure_diagonal_t1 = pvdfile.read_set_data(t1, "pressure", pointsetarray=diagonal)
+pressure_xaxis_t2 = pvdfile.read_set_data(t2, "pressure", pointsetarray=xaxis)
+pressure_diagonal_t2 = pvdfile.read_set_data(t2, "pressure", pointsetarray=diagonal)
 ```
 
 
