@@ -387,25 +387,23 @@ class VTUIO:
         if callable(function) is False:
             print("function is not a function")
             raise TypeError
-        fieldarray = np.zeros(len(self.points))
+        if cell is True:
+            points = self.cell_center_points
+        else:
+            points = self.points
+        fieldarray = np.zeros(len(points))
         for i,_ in enumerate(fieldarray):
             if self.dim == 2:
-                fieldarray[i] = function(self.points[i,0], self.points[i,1], 0.0)
+                fieldarray[i] = function(points[i,0], points[i,1], 0.0)
             else:
-                fieldarray[i] = function(self.points[i,0], self.points[i,1], self.points[i,2])
+                fieldarray[i] = function(points[i,0], points[i,1], points[i,2])
         field_vtk = numpy_to_vtk(fieldarray)
-        r = self.pdata.AddArray(field_vtk)
-        self.pdata.GetArray(r).SetName(fieldname)
         if cell is True:
-            p2c = vtk.vtkPointDataToCellData()
-            p2c.SetInputData(self.output)
-            p2c.Update()
-            outcells = p2c.GetOutput()
-            cells = outcells.GetCellData()
-            array =  cells.GetArray(fieldname)
-            cells_orig = self.output.GetCellData()
-            cells_orig.AddArray(array)
-            self.pdata.RemoveArray(fieldname)
+            r = self.cdata.AddArray(field_vtk)
+            self.cdata.GetArray(r).SetName(fieldname)
+        else:
+            r = self.pdata.AddArray(field_vtk)
+            self.pdata.GetArray(r).SetName(fieldname)
         if writefile is True:
             writer = vtk.vtkXMLUnstructuredGridWriter()
             writer.SetFileName(ofilename)
@@ -428,32 +426,30 @@ class VTUIO:
             if callable(function) is False:
                 print("functionarray is not containing functions only.")
                 raise TypeError
-        fieldarray = np.zeros((len(self.points), mdim))
+        if cell is True:
+            points = self.cell_center_points
+        else:
+            points = self.points
+        fieldarray = np.zeros((len(points), mdim))
         for i,_ in enumerate(fieldarray):
             for j, func in enumerate(functionarray):
                 if self.dim == 2:
                     fieldarray[i,j] = func(
-                        self.points[i,0],
-                        self.points[i,1],
+                        points[i,0],
+                        points[i,1],
                         0.0)
                 else:
                     fieldarray[i,j] = func(
-                        self.points[i,0],
-                        self.points[i,1],
-                        self.points[i,2])
+                        points[i,0],
+                        points[i,1],
+                        points[i,2])
         field_vtk = numpy_to_vtk(fieldarray)
-        r = self.pdata.AddArray(field_vtk)
-        self.pdata.GetArray(r).SetName(fieldname)
         if cell is True:
-            p2c = vtk.vtkPointDataToCellData()
-            p2c.SetInputData(self.output)
-            p2c.Update()
-            outcells = p2c.GetOutput()
-            cells = outcells.GetCellData()
-            array =  cells.GetArray(fieldname)
-            cells_orig = self.output.GetCellData()
-            cells_orig.AddArray(array)
-            self.pdata.RemoveArray(fieldname)
+            r = self.cdata.AddArray(field_vtk)
+            self.cdata.GetArray(r).SetName(fieldname)
+        else:
+            r = self.pdata.AddArray(field_vtk)
+            self.pdata.GetArray(r).SetName(fieldname)
         if writefile is True:
             writer = vtk.vtkXMLUnstructuredGridWriter()
             writer.SetFileName(ofilename)
