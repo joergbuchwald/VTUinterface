@@ -16,10 +16,17 @@ Copyright (c) 2012-2021, OpenGeoSys Community (http://www.opengeosys.org)
 import os
 import numpy as np
 import pandas as pd
+
+import warnings
+
+warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
+
 import vtk
 from vtk.util.numpy_support import vtk_to_numpy
 from vtk.util.numpy_support import numpy_to_vtk
+
 from lxml import etree as ET
+
 from scipy.interpolate import griddata
 from scipy.interpolate import interp1d
 
