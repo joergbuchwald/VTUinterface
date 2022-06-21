@@ -111,12 +111,12 @@ class VTUIO:
                 components = 1
             else:
                 components = field.shape[1]
-            data_array_dict[name] = ["point", components, np.min(field), np.max(field)]
+            data_array_dict[name] = ["point", components, np.min(field), np.mean(field), np.max(field)]
         for name in cf_names:
             field = self.get_cell_field(name)
-            data_array_dict[name] = ["cell", components, np.min(field), np.max(field)]
+            data_array_dict[name] = ["cell", components, np.min(field), np.mean(field), np.max(field)]
         df = pd.DataFrame(data_array_dict).T
-        return df.rename({0:"type", 1: "components", 2: "Min", 3: "Max"}, axis='columns')
+        return df.rename({0:"type", 1: "components", 2: "Min", 3: "Mean", 4: "Max"}, axis='columns')
 
     @property
     def cell_center_points(self):
