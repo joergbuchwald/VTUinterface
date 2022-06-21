@@ -849,6 +849,49 @@ class PVDIO:
                 field = field1 + fieldslope * (time-time1)
         return field
 
+    def read_aggregate(self, fieldname, agg_fct, data_type="point"):
+        """
+        Return time series data of an aggregate function for field "fieldname".
+
+        Parameters
+        ----------
+        fieldname : `str` or `list`
+        agg_fct : `str`,
+              can be: "min", "max" or "mean"
+        data_type : `str` optional
+              "point" or "cell"
+        """
+        agg_fcts = {"min": np.min,
+                    "max": np.max,
+                    "mean": np.mean}
+        resp_t = {}
+        if isinstance(fieldname, str):
+            resp_t = []
+        elif isinstance(fieldname, list):
+            resp_t = {}
+            for field in fieldname:
+                resp_t[field] = []
+        for i, filename in enumerate(self.vtufilenames):
+            vtu = VTUIO(os.path.join(self.folder, filename),
+                    nneighbors=self.nneighbors, dim=self.dim,
+                    one_d_axis=self.one_d_axis,
+                    two_d_planenormal=self.two_d_planenormal,
+                    interpolation_backend=self.interpolation_backend)
+            if isinstance(fieldname, str):
+                if data_type == "point":
+                    data = agg_fcts[agg_fct](vtu.get_point_field(fieldname))
+                elif data_type == "cell":
+                    data = agg_fcts[agg_fct](vtu.get_cell_field(fieldname))
+                resp_t.append(data)
+            elif isinstance(fieldname, list):
+                    for field in fieldname:
+                        if data_type == "point":
+                            data = agg_fcts[agg_fct](vtu.get_point_field(field))
+                        elif data_type == "cell":
+                            data = agg_fcts[agg_fct](vtu.get_cell_field(field))
+                        resp_t[field].append(data)
+        return resp_t
+
     def clear_pvd_rel_path(self, write=True):
         """
         Delete relative directory paths in the vtu filenames of the PVD file.
