@@ -45,6 +45,8 @@ from the project root directory.
 
 ## 3. FAQ/Troubleshooting
 
+Installation:
+- If the vtk whell can't be found on PyPI you can checkout https://github.com/pyvista/pyvista/discussions/2064 for unofficial wheels.
 
 As the input data is triangulated with QHull for the linear interpolation it might fail at boundaries or if a wrong input dimension is given.
 Possible solutions:
