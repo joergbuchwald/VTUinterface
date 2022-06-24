@@ -2,6 +2,10 @@
 
 All notable changes to **VTUinterface** will be documented in this file.
 
+### Changes
+* add aggregation method for calculating min/max/mean values
+* point set arrays can be read in as VTU file by setting pointsetarray to file name
+
 ## [0.69]
 
 ### Changes

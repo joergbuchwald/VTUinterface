@@ -14,10 +14,11 @@ Copyright (c) 2012-2021, OpenGeoSys Community (http://www.opengeosys.org)
 
 # pylint: disable=C0103, R0902, R0914, R0913
 import os
+import warnings
+
 import numpy as np
 import pandas as pd
 
-import warnings
 
 warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
 
@@ -166,10 +167,19 @@ class VTUIO:
         ----------
         points_interpol : `dict`
         """
-        nb = self.get_neighbors(points_interpol)
-        nearest = {}
-        for i, (key, _) in enumerate(points_interpol.items()):
-            nearest[key] = self.points[nb[i][0]]
+        if isinstance(points_interpol, dict):
+            nb = self.get_neighbors(points_interpol)
+            nearest = {}
+            for i, (key, _) in enumerate(points_interpol.items()):
+                nearest[key] = self.points[nb[i][0]]
+        elif isinstance(points_interpol, np.ndarray):
+            locator = vtk.vtkStaticPointLocator()
+            locator.SetDataSet(self.output)
+            locator.BuildLocator()
+            nearestindices = []
+            for point in points_interpol:
+                nearestindices.append(locator.FindClosestPoint([point[0], point[1], point[2]]))
+            nearest[nearestindices]
         return nearest
 
     def get_nearest_indices(self, points_interpol):
@@ -180,10 +190,18 @@ class VTUIO:
         ----------
         points_interpol : `dict`
         """
-        nb = self.get_neighbors(points_interpol)
-        nearest = {}
-        for i, (key, _) in enumerate(points_interpol.items()):
-            nearest[key] = nb[i][0]
+        if isinstance(points_interpol, dict):
+            nb = self.get_neighbors(points_interpol)
+            nearest = {}
+            for i, (key, _) in enumerate(points_interpol.items()):
+                nearest[key] = nb[i][0]
+        elif isinstance(points_interpol, np.ndarray):
+            locator = vtk.vtkStaticPointLocator()
+            locator.SetDataSet(self.output)
+            locator.BuildLocator()
+            nearest = []
+            for point in points_interpol:
+                nearest.append(locator.FindClosestPoint([point[0], point[1], point[2]]))
         return nearest
 
 
@@ -360,13 +378,16 @@ class VTUIO:
         Parameters
         ----------
         fieldname : `str`
-        pointsetarray : `list`, optional
-                        default: [(0,0,0)]
+        pointsetarray : `list`, `numpy.ndarray` or `str`
+                        if `str`, pointsetarray is construed as a filename of a submesh
         interpolation_method : `str`, optional
                                default: 'linear'
         """
         if pointsetarray is None:
-            pointsetarray = [(0,0,0)]
+            raise RuntimeError("No pointsetarray given.")
+        if isinstance(pointsetarray, str):
+            vtu = VTUIO(pointsetarray, dim=3)
+            pointsetarray = vtu.points
         pts = {}
         # convert into point dictionary
         for i, entry in enumerate(pointsetarray):
@@ -798,13 +819,16 @@ class PVDIO:
         ----------
         time : `float`
         fieldname : `str`
-        pointsetarray : `array`, optional
-                        default: [(0,0,0)]
+        pointsetarray : `list`, `numpy.ndarray` or `str`
+                        if `str`, pointsetarray is construed as a filename of a submesh
         interpolation_method : `str`
                                default: 'linear'
         """
         if pointsetarray is None:
-            pointsetarray = [(0,0,0)]
+            raise RuntimeError("No pointsetarray given.")
+        if isinstance(pointsetarray, str):
+            vtu = VTUIO(pointsetarray, dim=3)
+            pointsetarray = vtu.points
         filename = None
         for i, ts in enumerate(self.timesteps):
             if time == ts:
@@ -849,7 +873,7 @@ class PVDIO:
                 field = field1 + fieldslope * (time-time1)
         return field
 
-    def read_aggregate(self, fieldname, agg_fct, data_type="point"):
+    def read_aggregate(self, fieldname, agg_fct, data_type="point", pointsetarray=None):
         """
         Return time series data of an aggregate function for field "fieldname".
 
@@ -860,6 +884,9 @@ class PVDIO:
               can be: "min", "max" or "mean"
         data_type : `str` optional
               "point" or "cell"
+        pointsetarray : `str`, `list` or `numpy.ndarray`
+                        defines a submesh
+                        if `str` pointsetarray is construed as filename containing the mesh
         """
         agg_fcts = {"min": np.min,
                     "max": np.max,
@@ -871,25 +898,33 @@ class PVDIO:
             resp_t = {}
             for field in fieldname:
                 resp_t[field] = []
+        if not pointsetarray is None:
+            if isinstance(pointsetarray, str):
+                vtu = VTUIO(pointsetarray, dim=3)
+                pointsetarray = vtu.points
+            pointsetarray = np.array(pointsetarray)
+        submeshindices = None
         for i, filename in enumerate(self.vtufilenames):
             vtu = VTUIO(os.path.join(self.folder, filename),
                     nneighbors=self.nneighbors, dim=self.dim,
                     one_d_axis=self.one_d_axis,
                     two_d_planenormal=self.two_d_planenormal,
                     interpolation_backend=self.interpolation_backend)
+            if (i == 0) and (not pointsetarray is None):
+                submeshindices = vtu.get_nearest_indices(pointsetarray)
             if isinstance(fieldname, str):
                 if data_type == "point":
-                    data = agg_fcts[agg_fct](vtu.get_point_field(fieldname))
+                    data = agg_fcts[agg_fct](vtu.get_point_field(fieldname)[submeshindices])
                 elif data_type == "cell":
-                    data = agg_fcts[agg_fct](vtu.get_cell_field(fieldname))
+                    data = agg_fcts[agg_fct](vtu.get_cell_field(fieldname)[submeshindices])
                 resp_t.append(data)
             elif isinstance(fieldname, list):
-                    for field in fieldname:
-                        if data_type == "point":
-                            data = agg_fcts[agg_fct](vtu.get_point_field(field))
-                        elif data_type == "cell":
-                            data = agg_fcts[agg_fct](vtu.get_cell_field(field))
-                        resp_t[field].append(data)
+                for field in fieldname:
+                    if data_type == "point":
+                        data = agg_fcts[agg_fct](vtu.get_point_field(field)[submeshindices])
+                    elif data_type == "cell":
+                        data = agg_fcts[agg_fct](vtu.get_cell_field(field)[submeshindices])
+                    resp_t[field].append(data)
         return resp_t
 
     def clear_pvd_rel_path(self, write=True):
