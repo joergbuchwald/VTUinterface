@@ -134,6 +134,13 @@ class TestiOGS(unittest.TestCase):
         self.assertEqual(points["pt1"].all(), np.array([0.0, 0.0]).all())
         self.assertEqual(points["pt2"].all(), np.array([0.0, 0.1]).all())
         self.assertEqual(points["pt3"].all(), np.array([0.1, 0.0]).all())
+    def test_aggregate(self):
+        pvdfile1 = VTUinterface.PVDIO("examples/tunnel_heat_tunnel_restart.pvd", dim=2)
+        pvdfile2 = VTUinterface.PVDIO("examples/tunnel_heat_tunnel_inner.pvd", dim=2)
+        T_max_heater1 = pvdfile1.read_aggregate("temperature",agg_fct="max",
+                pointsetarray="examples/tunnel_heat_tunnel_inner_ts_160_t_9856003.000000.vtu")
+        T_max_heater2 = pvdfile2.read_aggregate("temperature",agg_fct="max")
+        self.assertEqual(np.array(T_max_heater1).all(), np.array(T_max_heater2).all())
 
 if __name__ == '__main__':
     unittest.main()
