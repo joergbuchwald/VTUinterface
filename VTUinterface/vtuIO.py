@@ -694,14 +694,13 @@ class PVDIO:
         ----------
         fieldname : `str`
         pts : `dict`, optional
-              default: {'pt0': (0.0,0.0,0.0)}
         data_type : `str` optional
               "point" or "cell"
         interpolation_method : `str`, optional
                                default: 'linear
         """
         if pts is None:
-            pts = {'pt0': (0.0,0.0,0.0)}
+            raise RuntimeError("No points given")
         resp_t = {}
         for pt in pts:
             if isinstance(fieldname, str):
@@ -953,3 +952,13 @@ class PVDIO:
         for entry in  self.vtufilenames:
             newlist.append(entry.split("/")[-1])
         self.vtufilenames = newlist
+
+    def write_xdmf(self, filename):
+        import meshio
+        mesh = meshio.read(self.vtufilenames[0])
+        with meshio.xdmf.TimeSeriesWriter(filename) as writer:
+            for i, t in enumerate(self.timesteps):
+                mesh = meshio.read(self.vtufilenames[i])
+                if i == 0:
+                    writer.write_points_cells(mesh.points, mesh.cells)
+                writer.write_data(t, point_data=mesh.point_data, cell_data=mesh.cell_data)

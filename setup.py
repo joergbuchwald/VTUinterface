@@ -54,5 +54,6 @@ setup(name="VTUinterface",
       platforms=["Windows", "Linux", "Solaris", "Mac OS-X", "Unix"],
       include_package_data=True,
       install_requires=["lxml", "vtk", "pandas", "scipy"],
+      extras_require = {"XDMFsupport":"meshio"},
       py_modules=["vtuIO"],
       package_dir={'': 'VTUinterface'})
