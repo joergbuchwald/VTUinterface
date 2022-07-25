@@ -86,7 +86,14 @@ class VTUIO:
             self.plane = [0, 1, 2]
             self.plane.pop(two_d_planenormal)
             self.points = np.delete(self.points, two_d_planenormal, 1)
+        # interpolation settings
         self.interpolation_backend = interpolation_backend
+        self.vtk_gaussian_sharpness = 4.0
+        self.vtk_gaussian_radius = 0.5
+        self.vtk_gaussian_footprint_to_n_closest = False
+        self.vtk_shepard_power_parameter = 2.0
+        self.vtk_shepard_radius = 0.5
+
 
     @property
     def header(self):
@@ -248,7 +255,17 @@ class VTUIO:
         interpolator = vtk.vtkPointInterpolator()
         interpolator.SetInputData(out_u_grid)
         interpolator.SetSourceData(self.output)
-        interpolator.SetKernel(kernels[interpolation_method])
+        kernel = kernels[interpolation_method]
+        if interpolation_method == "gaussian":
+            if self.vtk_gaussian_footprint_to_n_closest is True:
+                kernel.SetKernelFootprintToNClosest()
+                kernel.SetNumberOfPoints(self.nneighbors)
+            kernel.SetSharpness(self.vtk_gaussian_sharpness)
+            kernel.SetRadius(self.vtk_gaussian_radius)
+        if interpolation_method == "shepard":
+            kernel.SetPowerParameter(self.vtk_shepard_power_parameter)
+            kernel.SetRadius(self.vtk_shepard_radius)
+        interpolator.SetKernel(kernel)
         interpolator.SetLocator(locator)
         interpolator.Update()
         return interpolator.GetOutput().GetPointData()

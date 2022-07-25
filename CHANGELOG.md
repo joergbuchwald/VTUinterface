@@ -2,6 +2,9 @@
 
 All notable changes to **VTUinterface** will be documented in this file.
 
+## [0.701]
+* add meaningful defaults for gaussian and shepard vtk interpolation kernel
+
 ## [0.700]
 * add XDMF export (optional additional prereq.: meshio)
 * add aggregation method for calculating min/max/mean values
