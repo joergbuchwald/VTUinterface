@@ -238,7 +238,7 @@ class VTUIO:
                         (grid_x, grid_y, grid_z), method=interpolation_method)[0][0][0]
         return resp
 
-    def get_data_vtk(self, points_interpol, interpolation_method="linear"):
+    def get_data_vtk(self, points_interpol, data_type="point", interpolation_method="linear"):
         """
         Get interpolated data for points_interpol using vtks built-in interpolation methods
         """
@@ -254,7 +254,20 @@ class VTUIO:
         locator.BuildLocator()
         interpolator = vtk.vtkPointInterpolator()
         interpolator.SetInputData(out_u_grid)
-        interpolator.SetSourceData(self.output)
+        if data_type == "point":
+            interpolator.SetSourceData(self.output)
+        else:
+            out_u_grid_source = vtk.vtkUnstructuredGrid()
+            r_source = vtk.vtkPoints()
+            r_source.SetData(numpy_to_vtk(self.cell_center_points))
+            out_u_grid_source.SetPoints(r_source)
+            pdata_source = out_u_grid_source.GetPointData()
+            cellfieldnames = self.get_cell_field_names()
+            for fieldname in cellfieldnames:
+                carray = self.cdata.GetArray(fieldname)
+                q = pdata_source.AddArray(carray)
+                pdata_source.GetArray(q).SetName(fieldname)
+            interpolator.SetSourceData(out_u_grid_source)
         kernel = kernels[interpolation_method]
         if interpolation_method == "gaussian":
             if self.vtk_gaussian_footprint_to_n_closest is True:
@@ -367,17 +380,15 @@ class VTUIO:
                     for field in fieldname:
                         resp[pt][field] = data[field][pt]
         elif self.interpolation_backend == "vtk":
-            if data_type != "point":
-                raise RuntimeError("reading cell data is not working with vtk backend yet")
             if isinstance(fieldname, str):
                 resp_array = vtk_to_numpy(self.get_data_vtk(
-                        pts, interpolation_method=interpolation_method).GetArray(fieldname))
+                        pts, data_type=data_type, interpolation_method=interpolation_method).GetArray(fieldname))
                 for i, pt in enumerate(pts):
                     resp[pt] = resp_array[i]
 
             elif isinstance(fieldname, list):
                 resp_array_dict = {}
-                vtkdata = self.get_data_vtk(pts, interpolation_method=interpolation_method)
+                vtkdata = self.get_data_vtk(pts, data_type=data_type, interpolation_method=interpolation_method)
                 for field in fieldname:
                     resp_array_dict[field] = vtk_to_numpy(vtkdata.GetArray(fieldname))
                 for i, pt in enumerate(pts):
@@ -749,16 +760,14 @@ class PVDIO:
                         for field in fieldname:
                             resp_t[pt][field].append(data[field][pt])
             elif self.interpolation_backend == "vtk":
-                if data_type != "point":
-                    raise RuntimeError("reading cell data is not working with vtk backend yet")
                 if isinstance(fieldname, str):
                     data = vtk_to_numpy(
-                        vtu.get_data_vtk(pts, interpolation_method=interpolation_method).GetArray(fieldname))
+                        vtu.get_data_vtk(pts, data_type=data_type, interpolation_method=interpolation_method).GetArray(fieldname))
                     for j, pt in enumerate(pts):
                         resp_t[pt].append(data[j])
                 elif isinstance(fieldname, list):
                     data = {}
-                    vtkdata = vtu.get_data_vtk(pts, interpolation_method=interpolation_method)
+                    vtkdata = vtu.get_data_vtk(pts, data_type=data_type, interpolation_method=interpolation_method)
                     for field in fieldname:
                         data[field] = vtk_to_numpy(vtkdata.GetArray(fieldname))
                     for j, pt in enumerate(pts):
