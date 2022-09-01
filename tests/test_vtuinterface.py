@@ -21,8 +21,8 @@ class TestiOGS(unittest.TestCase):
         self.assertAlmostEqual(pressure_interpolation_v['pt0'][-1],0.6)
         self.assertAlmostEqual(pressure_interpolation_v['pt1'][-1],-0.6)
         pressure_interpolation_s = pvdfile.read_time_series('pressure', selected_points, interpolation_method="shepard")
-        self.assertAlmostEqual(pressure_interpolation_s['pt0'][-1], 0.41946054)
-        self.assertAlmostEqual(pressure_interpolation_s['pt1'][-1],-0.41946054)
+        self.assertAlmostEqual(pressure_interpolation_s['pt0'][-1], 0.4720395869897734)
+        self.assertAlmostEqual(pressure_interpolation_s['pt1'][-1],-0.4720395869897734)
 
     def test_point_set_read(self):
         t = 0.5
@@ -37,7 +37,7 @@ class TestiOGS(unittest.TestCase):
         vtufile = VTUinterface.VTUIO("examples/square_1e2_pcs_0_ts_1_t_1.000000.vtu", dim=2)
         field = vtufile.get_point_field("pressure")
         fieldnew = 0.5*field
-        vtufile.write_point_field(fieldnew, "pressure_new","write_test.vtu")
+        vtufile.add_point_field(fieldnew, "pressure_new","write_test.vtu")
         vtufile = VTUinterface.VTUIO("write_test.vtu", dim=2)
         def fct(x,y,z):
             return x*10
