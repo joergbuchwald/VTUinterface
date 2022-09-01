@@ -981,6 +981,7 @@ class PVDIO:
 
     def write_xdmf(self, filename):
         import meshio
+        print("Danger: This function only writes point and cell data. Information could go lost!.")
         mesh = meshio.read(self.vtufilenames[0])
         with meshio.xdmf.TimeSeriesWriter(filename) as writer:
             for i, t in enumerate(self.timesteps):
