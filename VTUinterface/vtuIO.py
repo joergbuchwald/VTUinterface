@@ -68,6 +68,7 @@ class VTUIO:
             self.output = self.reader.GetOutput()
             self.pdata = self.output.GetPointData()
             self.cdata = self.output.GetCellData()
+            self.ipdata = self.output.GetFieldData()
         except AttributeError:
             print(f"File {self.filename} does not contain any data")
         try:
@@ -283,8 +284,6 @@ class VTUIO:
         interpolator.Update()
         return interpolator.GetOutput().GetPointData()
 
-
-
     def get_point_field(self, fieldname):
         """
         Return vtu cell field as numpy array.
@@ -339,6 +338,17 @@ class VTUIO:
         fieldnames = []
         for i in range(self.pdata.GetNumberOfArrays()):
             fieldnames.append(self.pdata.GetArrayName(i))
+        return fieldnames
+
+    def get_integration_point_field_names(self):
+        """
+        Get names of all integration point data fields in the vtu file.
+        """
+        fieldnames = []
+        for i in range(self.ipdata.GetNumberOfArrays()):
+            name = self.ipdata.GetArrayName(i)
+            if "_ip" in name:
+                fieldnames.append(name)
         return fieldnames
 
     def get_data(self, fieldname, pts = None, data_type="point", interpolation_method="linear"):
@@ -530,10 +540,7 @@ class VTUIO:
         cells_orig = self.output.GetCellData()
         cells_orig.AddArray(array)
         if writefile is True:
-            writer = vtk.vtkXMLUnstructuredGridWriter()
-            writer.SetFileName(ofilename)
-            writer.SetInputData(self.output)
-            writer.Write()
+            self.write(ofilename)
 
     def delete_point_field(self, fieldnames, ofilename, writefile=True):
         """
@@ -543,6 +550,7 @@ class VTUIO:
         ----------
         fieldnames : `str` or `list`
         ofilename : `str`
+        writefile : `bool`
         """
         if isinstance(fieldnames, str):
             self.pdata.RemoveArray(fieldnames)
@@ -552,10 +560,7 @@ class VTUIO:
         else:
             raise TypeError("Fieldnames has the wrong type. Please provide a list or string.")
         if writefile is True:
-            writer = vtk.vtkXMLUnstructuredGridWriter()
-            writer.SetFileName(ofilename)
-            writer.SetInputData(self.output)
-            writer.Write()
+            self.write(ofilename)
 
     def delete_cell_field(self, fieldnames, ofilename, writefile=True):
         """
@@ -565,6 +570,7 @@ class VTUIO:
         ----------
         fieldnames : `str` or `list`
         ofilename : `str`
+        writefile : `bool`
         """
         if isinstance(fieldnames, str):
             self.cdata.RemoveArray(fieldnames)
@@ -574,12 +580,30 @@ class VTUIO:
         else:
             raise TypeError("Fieldnames has the wrong type. Please provide a list or string.")
         if writefile is True:
-            writer = vtk.vtkXMLUnstructuredGridWriter()
-            writer.SetFileName(ofilename)
-            writer.SetInputData(self.output)
-            writer.Write()
+            self.write(ofilename)
 
-    def write_point_field(self, field, fieldname, ofilename, writefile=True):
+    def delete_integration_point_field(self, fieldnames, ofilename, writefile=True):
+        """
+        delete integration point field(s) and write data to disk
+
+        Parameters
+        ----------
+        fieldnames : `str` or `list`
+        ofilename : `str`
+        writefile : `bool`
+        """
+        if isinstance(fieldnames, str):
+            self.ipdata.RemoveArray(fieldnames)
+        elif isinstance(fieldnames, list):
+            for fieldname in fieldnames:
+                self.ipdata.RemoveArray(fieldname)
+        else:
+            raise TypeError("Fieldnames has the wrong type. Please provide a list or string.")
+        if writefile is True:
+            self.write(ofilename)
+
+
+    def add_point_field(self, field, fieldname, ofilename, writefile=True):
         """
         Write a field (numpy array of correct size)
         to field "fieldname" as file "ofilename".
@@ -589,17 +613,15 @@ class VTUIO:
         field : `array`
         fieldname : `str`
         ofilename : `str`
+        writefile : `bool`
         """
         field_vtk = numpy_to_vtk(field)
         r = self.pdata.AddArray(field_vtk)
         self.pdata.GetArray(r).SetName(fieldname)
         if writefile is True:
-            writer = vtk.vtkXMLUnstructuredGridWriter()
-            writer.SetFileName(ofilename)
-            writer.SetInputData(self.output)
-            writer.Write()
+            self.write(ofilename)
 
-    def write_cell_field(self, field, fieldname, ofilename, writefile=True):
+    def add_cell_field(self, field, fieldname, ofilename, writefile=True):
         """
         Write a field (numpy array of correct size)
         to field "fieldname" as file "ofilename".
@@ -609,15 +631,13 @@ class VTUIO:
         field : `array`
         fieldname : `str`
         ofilename : `str`
+        writefile : `bool`
         """
         field_vtk = numpy_to_vtk(field)
         r = self.cdata.AddArray(field_vtk)
         self.cdata.GetArray(r).SetName(fieldname)
         if writefile is True:
-            writer = vtk.vtkXMLUnstructuredGridWriter()
-            writer.SetFileName(ofilename)
-            writer.SetInputData(self.output)
-            writer.Write()
+            self.write(ofilename)
 
     def write(self, filename):
         """
@@ -665,6 +685,42 @@ class PVDIO:
         self.two_d_planenormal = two_d_planenormal
         self.interpolation_backend = interpolation_backend
 
+    def get_cell_field_names(self):
+        """
+        Get names of all cell fields in the vtu file.
+        """
+        filename = self.vtufilenames[0]
+        vtu = VTUIO(os.path.join(self.folder, filename),
+                    nneighbors=self.nneighbors, dim=self.dim,
+                    one_d_axis=self.one_d_axis,
+                    two_d_planenormal=self.two_d_planenormal,
+                    interpolation_backend=self.interpolation_backend)
+        return vtu.get_cell_field_names()
+
+    def get_point_field_names(self):
+        """
+        Get names of all point fields in the vtu file.
+        """
+        filename = self.vtufilenames[0]
+        vtu = VTUIO(os.path.join(self.folder, filename),
+                    nneighbors=self.nneighbors, dim=self.dim,
+                    one_d_axis=self.one_d_axis,
+                    two_d_planenormal=self.two_d_planenormal,
+                    interpolation_backend=self.interpolation_backend)
+        return vtu.get_point_field_names()
+
+    def get_integration_point_field_names(self):
+        """
+        Get names of integration point fields in the vtu file.
+        """
+        filename = self.vtufilenames[0]
+        vtu = VTUIO(os.path.join(self.folder, filename),
+                    nneighbors=self.nneighbors, dim=self.dim,
+                    one_d_axis=self.one_d_axis,
+                    two_d_planenormal=self.two_d_planenormal,
+                    interpolation_backend=self.interpolation_backend)
+        return vtu.get_integration_point_field_names()
+
     def delete_point_field(self, fieldnames):
         """
         delete point field(s) and write data to disk
@@ -696,6 +752,22 @@ class PVDIO:
                     two_d_planenormal=self.two_d_planenormal,
                     interpolation_backend=self.interpolation_backend)
             vtu.delete_cell_field(fieldnames, filename)
+
+    def delete_integration_point_field(self, fieldnames):
+        """
+        delete integration point field(s) and write data to disk
+
+        Parameters
+        ----------
+        fieldnames : `str` or `list`
+        """
+        for filename in self.vtufilenames:
+            vtu = VTUIO(os.path.join(self.folder, filename),
+                    nneighbors=self.nneighbors, dim=self.dim,
+                    one_d_axis=self.one_d_axis,
+                    two_d_planenormal=self.two_d_planenormal,
+                    interpolation_backend=self.interpolation_backend)
+            vtu.delete_integration_point_field(fieldnames, filename)
 
     def read_pvd(self, filename):
         """
