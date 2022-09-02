@@ -639,17 +639,22 @@ class VTUIO:
         if writefile is True:
             self.write(ofilename)
 
-    def write(self, filename):
+    def write(self, filename, datamode="appended"):
         """
         Write data as file "filename".
 
         Parameters
         ----------
         filename : `str`
+        datamode : `str`
         """
         writer = vtk.vtkXMLUnstructuredGridWriter()
         writer.SetFileName(filename)
         writer.SetInputData(self.output)
+        if datamode == "binary":
+            writer.SetDataModeToBinary()
+        elif datamode == "ascii":
+            writer.SetDataModeToAscii()
         writer.Write()
 
 
