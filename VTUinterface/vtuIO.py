@@ -5,7 +5,7 @@ outputed by Finite Element software like OpenGeoSys. It uses the VTK python
 wrapper and linear interpolation between time steps and grid points access
 any points in and and time within the simulation domain.
 
-Copyright (c) 2012-2021, OpenGeoSys Community (http://www.opengeosys.org)
+Copyright (c) 2012-2022, OpenGeoSys Community (http://www.opengeosys.org)
             Distributed under a Modified BSD License.
               See accompanying file LICENSE or
               http://www.opengeosys.org/project/license
@@ -51,7 +51,7 @@ class VTUIO:
                  scipy or vtk
     """
     def __init__(self, filename, nneighbors=20, dim=3, one_d_axis=0, two_d_planenormal=2,
-                                                        interpolation_backend="scipy"):
+                                                        interpolation_backend="vtk"):
         self.filename = filename
         if filename.split(".")[-1] == "vtu":
             self.reader = vtk.vtkXMLUnstructuredGridReader()
@@ -239,7 +239,7 @@ class VTUIO:
                         (grid_x, grid_y, grid_z), method=interpolation_method)[0][0][0]
         return resp
 
-    def get_data_vtk(self, points_interpol, data_type="point", interpolation_method="linear"):
+    def get_data_vtk(self, points_interpol, data_type="point", interpolation_method="probefilter"):
         """
         Get interpolated data for points_interpol using vtks built-in interpolation methods
         """
@@ -253,7 +253,10 @@ class VTUIO:
         locator = vtk.vtkStaticPointLocator()
         locator.SetDataSet(self.output)
         locator.BuildLocator()
-        interpolator = vtk.vtkPointInterpolator()
+        if interpolation_method == "probefilter":
+            interpolator = vtk.vtkProbeFilter()
+        else:
+            interpolator = vtk.vtkPointInterpolator()
         interpolator.SetInputData(out_u_grid)
         if data_type == "point":
             interpolator.SetSourceData(self.output)
@@ -269,7 +272,8 @@ class VTUIO:
                 q = pdata_source.AddArray(carray)
                 pdata_source.GetArray(q).SetName(fieldname)
             interpolator.SetSourceData(out_u_grid_source)
-        kernel = kernels[interpolation_method]
+        if interpolation_method != "probefilter":
+            kernel = kernels[interpolation_method]
         if interpolation_method == "gaussian":
             if self.vtk_gaussian_footprint_to_n_closest is True:
                 kernel.SetKernelFootprintToNClosest()
@@ -279,8 +283,9 @@ class VTUIO:
         if interpolation_method == "shepard":
             kernel.SetPowerParameter(self.vtk_shepard_power_parameter)
             kernel.SetRadius(self.vtk_shepard_radius)
-        interpolator.SetKernel(kernel)
-        interpolator.SetLocator(locator)
+        if not interpolation_method == "probefilter":
+            interpolator.SetKernel(kernel)
+            interpolator.SetLocator(locator)
         interpolator.Update()
         return interpolator.GetOutput().GetPointData()
 
