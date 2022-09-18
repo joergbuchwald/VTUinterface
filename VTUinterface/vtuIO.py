@@ -1056,6 +1056,30 @@ class PVDIO:
             newlist.append(entry.split("/")[-1])
         self.vtufilenames = newlist
 
+    def rename(self, newname):
+        tree = ET.parse(self.filename)
+        if not ".pvd" in newname:
+            newname = newname + ".pvd"
+        os.rename(os.path.join(self.folder, self.filename), os.path.join(self.folder, newname))
+        newname = newname.split(".pvd")[0]
+        vtufilelist = self.vtufilenames
+        for i, filename in enumerate(vtufilelist):
+            newvtuname = filename.replace(self.filename.split(".")[0],newname)
+            self.vtufilenames[i] = newvtuname
+            os.rename(os.path.join(self.folder, filename), os.path.join(self.folder, newvtuname))
+        xpath="./Collection/DataSet"
+        root = tree.getroot()
+        find_xpath = root.findall(xpath)
+        for tag in find_xpath:
+            filename = tag.get("file")
+            filename_new = filename.replace(self.filename.split(".")[0],newname)
+            tag.set("file", filename_new)
+        self.filename = f"{newname}.pvd"
+        tree.write(self.filename,
+                            encoding="ISO-8859-1",
+                            xml_declaration=True,
+                            pretty_print=True)
+
     def write_xdmf(self, filename):
         import meshio
         print("Danger: This function only writes point and cell data. Information could go lost!.")
