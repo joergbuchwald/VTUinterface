@@ -405,7 +405,7 @@ class VTUIO:
                 resp_array_dict = {}
                 vtkdata = self.get_data_vtk(pts, data_type=data_type, interpolation_method=interpolation_method)
                 for field in fieldname:
-                    resp_array_dict[field] = vtk_to_numpy(vtkdata.GetArray(fieldname))
+                    resp_array_dict[field] = vtk_to_numpy(vtkdata.GetArray(field))
                 for i, pt in enumerate(pts):
                     for field in fieldname:
                         resp[pt][field] = resp_array_dict[field][i]
