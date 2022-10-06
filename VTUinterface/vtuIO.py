@@ -1057,6 +1057,13 @@ class PVDIO:
         self.vtufilenames = newlist
 
     def rename(self, newname):
+        """
+        Rename PVD file
+
+        Parameters
+        ----------
+        newname : `str`
+        """
         tree = ET.parse(self.filename)
         if not ".pvd" in newname:
             newname = newname + ".pvd"
@@ -1080,7 +1087,59 @@ class PVDIO:
                             xml_declaration=True,
                             pretty_print=True)
 
+    def append(self, filename, vtu_rename=False):
+        """
+        appends entries from another PVD file
+
+        Parameters
+        ----------
+        filename : `str`
+        vtu_rename : `bool`
+        """
+        tree = ET.parse(filename)
+        xpath="./Collection/DataSet"
+        root = tree.getroot()
+        find_xpath = root.findall(xpath)
+        offset = 0
+        if float(find_xpath[0].get("timestep")) < self.timesteps[-1]:
+            offset = self.timesteps[-1]
+        elif float(find_xpath[0].get("timestep")) == self.timesteps[-1]:
+            self.timesteps = self.timesteps[:-1]
+            self.vtufilenames = self.vtufilenames[:-1]
+        for tag in find_xpath:
+            self.timesteps = np.append(self.timesteps, [float(tag.attrib['timestep'])+offset])
+            newvtuname = tag.attrib['file']
+            if vtu_rename is True:
+                newvtuname = tag.attrib['file'].replace(filename.split(".")[0],
+                                                   self.filename.split(".")[0])
+                os.rename(os.path.join(self.folder, tag.attrib['file']), os.path.join(self.folder, newvtuname))
+            self.vtufilenames.append(newvtuname)
+        root = ET.Element("VTKFile")
+        root.attrib["type"] = "Collection"
+        root.attrib["version"] = "0.1"
+        root.attrib["byte_order"] = "LittleEndian"
+        root.attrib["compressor"] = "vtkZLibDataCompressor"
+        collection = ET.SubElement(root,"Collection")
+        timestepselements = []
+        #pvdwriter
+        for i, timestep in enumerate(self.timesteps):
+            timestepselements.append(ET.SubElement(collection, "DataSet"))
+            timestepselements[-1].attrib["timestep"] = str(timestep)
+            timestepselements[-1].attrib["group"] = ""
+            timestepselements[-1].attrib["part"] = "0"
+            timestepselements[-1].attrib["file"] = self.vtufilenames[i]
+        tree = ET.ElementTree(root)
+        tree.write(os.path.join(self.folder, self.filename), encoding="ISO-8859-1",
+                   xml_declaration=True, pretty_print=True)
+
     def write_xdmf(self, filename):
+        """
+        exports data as XDMF/HDF
+
+        Parameters
+        ----------
+        filename : `str`
+        """
         import meshio
         print("Danger: This function only writes point and cell data. Information could go lost!.")
         mesh = meshio.read(self.vtufilenames[0])
