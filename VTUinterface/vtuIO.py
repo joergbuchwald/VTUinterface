@@ -772,7 +772,7 @@ class PVDIO:
                     one_d_axis=self.one_d_axis,
                     two_d_planenormal=self.two_d_planenormal,
                     interpolation_backend=self.interpolation_backend)
-            vtu.delete_integration_point_field(fieldnames, os.path.join(self.folder,filename)
+            vtu.delete_integration_point_field(fieldnames, os.path.join(self.folder,filename))
 
     def read_pvd(self, filename):
         """
