@@ -52,6 +52,8 @@ class VTUIO:
     """
     def __init__(self, filename, nneighbors=20, dim=3, one_d_axis=0, two_d_planenormal=2,
                                                         interpolation_backend="vtk"):
+        print("WARNING: Default interpolation backend changed to VTK. This might result in")
+        print("slight changes of interpolated values if defaults are/were used.")
         self.filename = filename
         if filename.split(".")[-1] == "vtu":
             self.reader = vtk.vtkXMLUnstructuredGridReader()
@@ -76,17 +78,13 @@ class VTUIO:
         except AttributeError:
             print(f"File {self.filename} does not contain any points")
         self._cell_center_points = None
+        self._plane = [0, 1, 2]
         self.dim = dim
         self.nneighbors = nneighbors
         self.one_d_axis=one_d_axis
         self.two_d_planenormal = two_d_planenormal
-        if self.dim == 1:
-            self.one_d_axis = one_d_axis
-            self.points = self.points[:,one_d_axis]
-        if self.dim == 2:
-            self.plane = [0, 1, 2]
-            self.plane.pop(two_d_planenormal)
-            self.points = np.delete(self.points, two_d_planenormal, 1)
+        self._plane = [0, 1, 2]
+        self._plane.pop(self.two_d_planenormal)
         # interpolation settings
         self.interpolation_backend = interpolation_backend
         self.vtk_gaussian_sharpness = 4.0
@@ -96,6 +94,13 @@ class VTUIO:
         self.vtk_shepard_radius = 0.5
 
 
+    def _proj(self, array):
+        if self.dim == 1:
+            self.one_d_axis = self.one_d_axis
+            array = array[:,self.one_d_axis]
+        if self.dim == 2:
+            array = np.delete(array, self.two_d_planenormal, 1)
+        return array
     @property
     def header(self):
         header_dict = {"N Cells": [str(len(self.cell_center_points))], "N Points": [str(len(self.points))],
@@ -139,13 +144,6 @@ class VTUIO:
         ccf.VertexCellsOn()
         ccf.Update()
         self._cell_center_points = vtk_to_numpy(ccf.GetOutput().GetPoints().GetData())
-        if self.dim == 1:
-            self.one_d_axis = self.one_d_axis
-            self._cell_center_points = self._cell_center_points[:, self.one_d_axis]
-        if self.dim == 2:
-            self.plane = [0, 1, 2]
-            self.plane.pop(self.two_d_planenormal)
-            self._cell_center_points = np.delete(self._cell_center_points, self.two_d_planenormal, 1)
         return self._cell_center_points
 
     def get_neighbors(self, points_interpol, data_type="point"):
@@ -159,7 +157,7 @@ class VTUIO:
             return neighbors
         for i, (_, val) in enumerate(points_interpol.items()):
             if self.dim == 2:
-                x, y = self.plane
+                x, y = self._plane
                 df["r_"+str(i)] = (df[x]-val[x]) * (df[x]-val[x]) + (df[y]-val[y]) * (df[y]-val[y])
             elif self.dim == 3:
                 df["r_"+str(i)] = ((df[0]-val[0]) * (df[0]-val[0]) + (df[1]-val[1]) * (df[1]-val[1])
@@ -219,6 +217,7 @@ class VTUIO:
         """
         field = self.get_point_field(fieldname) if data_type == "point" else self.get_cell_field(fieldname)
         points = self.points if data_type == "point" else self.cell_center_points
+        points = self._proj(points)
         resp = {}
         for i, (key, val) in enumerate(points_interpol.items()):
             if self.dim == 1:
@@ -229,7 +228,7 @@ class VTUIO:
                 f = interp1d(data['x'], data['y'])
                 resp[key] = f(val[self.one_d_axis])
             elif self.dim == 2:
-                x, y = self.plane
+                x, y = self._plane
                 grid_x, grid_y = np.array([[[val[x]]],[[val[y]]]])
                 resp[key] = griddata(points[neighbors[i]], field[neighbors[i]],
                         (grid_x, grid_y), method=interpolation_method)[0][0]
@@ -356,7 +355,7 @@ class VTUIO:
                 fieldnames.append(name)
         return fieldnames
 
-    def get_data(self, fieldname, pts = None, data_type="point", interpolation_method="linear"):
+    def get_data(self, fieldname, pts = None, data_type="point", interpolation_method="probefilter"):
         """
         Get data of field "fieldname" at all points specified in "pts".
 
@@ -414,7 +413,7 @@ class VTUIO:
         return resp
 
 
-    def get_set_data(self, fieldname, pointsetarray=None, data_type="point", interpolation_method="linear"):
+    def get_set_data(self, fieldname, pointsetarray=None, data_type="point", interpolation_method="probefilter"):
         """
         Get data specified in fieldname at all points specified in "pointsetarray".
 
@@ -464,7 +463,9 @@ class VTUIO:
             points = self.points
         fieldarray = np.zeros(len(points))
         for i,_ in enumerate(fieldarray):
-            if self.dim == 2:
+            if self.dim == 1:
+                fieldarray[i] = function(points[i,0], 0.0, 0.0)
+            elif self.dim == 2:
                 fieldarray[i] = function(points[i,0], points[i,1], 0.0)
             else:
                 fieldarray[i] = function(points[i,0], points[i,1], points[i,2])
@@ -504,7 +505,12 @@ class VTUIO:
         fieldarray = np.zeros((len(points), mdim))
         for i,_ in enumerate(fieldarray):
             for j, func in enumerate(functionarray):
-                if self.dim == 2:
+                if self.dim == 1:
+                    fieldarray[i,j] = func(
+                        points[i,0],
+                        0.0,
+                        0.0)
+                elif self.dim == 2:
                     fieldarray[i,j] = func(
                         points[i,0],
                         points[i,1],
@@ -681,7 +687,7 @@ class PVDIO:
                  scipy or vtk
     """
     def __init__(self, filename, nneighbors=20, dim=3, one_d_axis=0, two_d_planenormal=2,
-                                                            interpolation_backend="scipy"):
+                                                            interpolation_backend="vtk"):
         if os.path.isfile(filename) is True:
             self.folder, self.filename = os.path.split(filename)
         else:
@@ -795,7 +801,7 @@ class PVDIO:
                 self.timesteps = np.append(self.timesteps, [float(dataset.attrib['timestep'])])
                 self.vtufilenames.append(dataset.attrib['file'])
 
-    def read_time_series(self, fieldname, pts=None, data_type="point", interpolation_method="linear"):
+    def read_time_series(self, fieldname, pts=None, data_type="point", interpolation_method="probefilter"):
         """
         Return time series data of field "fieldname" at points pts.
         Also a list of fieldnames can be provided as "fieldname"
@@ -918,7 +924,7 @@ class PVDIO:
                 field = field1 + fieldslope * (time-time1)
         return field
 
-    def read_set_data(self, time, fieldname, pointsetarray = None, data_type="point", interpolation_method="linear"):
+    def read_set_data(self, time, fieldname, pointsetarray = None, data_type="point", interpolation_method="probefilter"):
         """
         Get data of field "fieldname" at time "time" alon a given "pointsetarray".
 
