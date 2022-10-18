@@ -88,13 +88,13 @@ class TestiOGS(unittest.TestCase):
         field = vtufile.get_cell_field_as_point_data("t_10s")
         for i, entry in enumerate(field):
             if i == 0:
-                self.assertEqual(vtufile.points[i], 0)
+                self.assertEqual(vtufile.points[i][0], 0)
                 self.assertEqual(entry, 0.5)
             elif i == 10:
-                self.assertEqual(vtufile.points[i], 1)
+                self.assertEqual(vtufile.points[i][0], 1)
                 self.assertEqual(entry, 9.5)
             else:
-                self.assertAlmostEqual(entry, vtufile.points[i]*10)
+                self.assertAlmostEqual(entry, vtufile.points[i][0]*10)
     def test_celldata_as_point_data(self):
         vtufile = VTUinterface.VTUIO("examples/square_1e2_pcs_0_ts_1_t_1.000000.vtu", dim=2)
         v = vtufile.get_cell_field_as_point_data("MaterialIDs")
@@ -102,10 +102,12 @@ class TestiOGS(unittest.TestCase):
     def test_center_points(self):
         vtufile = VTUinterface.VTUIO("examples/square_1e2_pcs_0_ts_1_t_1.000000.vtu", dim=2)
         points = vtufile.cell_center_points
-        self.assertEqual(points[0].all(), np.array([0.05, 0.05]).all())
+        self.assertEqual(points[0].all(), np.array([0.05, 0.05, 0.0]).all())
     def test_time_series_cell(self):
-        pvdfile = VTUinterface.PVDIO("examples/square_1e2_pcs_0.pvd", dim=2)
+        pvdfile = VTUinterface.PVDIO("examples/square_1e2_pcs_0.pvd", dim=2, interpolation_backend="vtk")
+        pvdfile_scipy = VTUinterface.PVDIO("examples/square_1e2_pcs_0.pvd", dim=2, interpolation_backend="scipy")
         ts = pvdfile.read_time_series("MaterialIDs", pts={"pt0":[0.345,0.5231,0]}, data_type="cell")
+        ts_scipy = pvdfile.read_time_series("MaterialIDs", pts={"pt0":[0.345,0.5231,0]}, data_type="cell")
         self.assertEqual(ts["pt0"].all(), np.array([0.0, 0.0]).all())
     def test_read_time_step(self):
         t1 = 0.5
@@ -130,10 +132,10 @@ class TestiOGS(unittest.TestCase):
         self.assertEqual(indices["pt1"], 0)
         self.assertEqual(indices["pt2"], 11)
         self.assertEqual(indices["pt3"], 1)
-        self.assertEqual(points["pt0"].all(), np.array([0.1, 0.1]).all())
-        self.assertEqual(points["pt1"].all(), np.array([0.0, 0.0]).all())
-        self.assertEqual(points["pt2"].all(), np.array([0.0, 0.1]).all())
-        self.assertEqual(points["pt3"].all(), np.array([0.1, 0.0]).all())
+        self.assertEqual(points["pt0"].all(), np.array([0.1, 0.1, 0.0]).all())
+        self.assertEqual(points["pt1"].all(), np.array([0.0, 0.0, 0.0]).all())
+        self.assertEqual(points["pt2"].all(), np.array([0.0, 0.1, 0.0]).all())
+        self.assertEqual(points["pt3"].all(), np.array([0.1, 0.0, 0.0]).all())
     def test_aggregate(self):
         pvdfile1 = VTUinterface.PVDIO("examples/tunnel_heat_tunnel_restart.pvd", dim=2)
         pvdfile2 = VTUinterface.PVDIO("examples/tunnel_heat_tunnel_inner.pvd", dim=2)
