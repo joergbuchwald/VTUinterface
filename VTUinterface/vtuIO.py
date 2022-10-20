@@ -1082,7 +1082,7 @@ class PVDIO:
         newname = newname.split(".pvd")[0]
         vtufilelist = self.vtufilenames
         for i, filename in enumerate(vtufilelist):
-            newvtuname = filename.replace(self.filename.split(".")[0],newname)
+            newvtuname = filename.replace(self.filename.split(".pvd")[0], newname)
             self.vtufilenames[i] = newvtuname
             os.rename(os.path.join(self.folder, filename), os.path.join(self.folder, newvtuname))
         xpath="./Collection/DataSet"
@@ -1090,7 +1090,7 @@ class PVDIO:
         find_xpath = root.findall(xpath)
         for tag in find_xpath:
             filename = tag.get("file")
-            filename_new = filename.replace(self.filename.split(".")[0],newname)
+            filename_new = filename.replace(self.filename.split(".pvd")[0], newname)
             tag.set("file", filename_new)
         self.filename = f"{newname}.pvd"
         tree.write(self.filename,
@@ -1121,8 +1121,8 @@ class PVDIO:
             self.timesteps = np.append(self.timesteps, [float(tag.attrib['timestep'])+offset])
             newvtuname = tag.attrib['file']
             if vtu_rename is True:
-                newvtuname = tag.attrib['file'].replace(filename.split(".")[0],
-                                                   self.filename.split(".")[0])
+                newvtuname = tag.attrib['file'].replace(filename.split(".pvd")[0],
+                                                   self.filename.split(".pvd")[0])
                 os.rename(os.path.join(self.folder, tag.attrib['file']), os.path.join(self.folder, newvtuname))
             self.vtufilenames.append(newvtuname)
         root = ET.Element("VTKFile")
@@ -1141,6 +1141,49 @@ class PVDIO:
             timestepselements[-1].attrib["file"] = self.vtufilenames[i]
         tree = ET.ElementTree(root)
         tree.write(os.path.join(self.folder, self.filename), encoding="ISO-8859-1",
+                   xml_declaration=True, pretty_print=True)
+
+    @staticmethod
+    def create_pvd_from_pattern(filename, pattern=""):
+        files = os.listdir()
+        vtufiles = []
+        timesteps = []
+        for file in files:
+            if (pattern in file) and (".vtu" in file):
+                vtufiles.append(file)
+                if "_t_" in file:
+                    substring = file.split("_t_")[-1].split(".vtu")[0]
+                    if "." in substring:
+                        timesteps.append(float(substring.split("_")[0]))
+                    else:
+                        try:
+                            timesteps.append(float(substring.split("_")[0] +
+                                               "." +
+                                               substring.split("_")[1]))
+                        except IndexError:
+                            print("""Time step information does not contain
+                                          an appropriate separator.""")
+                else:
+                    print(f"No time information found in vtu file {file}")
+        datadict = {"timesteps": timesteps, "vtufiles": vtufiles}
+        df = pd.DataFrame(data=datadict)
+        df_sorted = df.sort_values(by=["timesteps"], ignore_index=True)
+        root = ET.Element("VTKFile")
+        root.attrib["type"] = "Collection"
+        root.attrib["version"] = "0.1"
+        root.attrib["byte_order"] = "LittleEndian"
+        root.attrib["compressor"] = "vtkZLibDataCompressor"
+        collection = ET.SubElement(root,"Collection")
+        timestepselements = []
+        #pvdwriter
+        for i in df_sorted.index:
+            timestepselements.append(ET.SubElement(collection, "DataSet"))
+            timestepselements[-1].attrib["timestep"] = str(df_sorted.iloc[i]["timesteps"])
+            timestepselements[-1].attrib["group"] = ""
+            timestepselements[-1].attrib["part"] = "0"
+            timestepselements[-1].attrib["file"] = df_sorted.iloc[i]["vtufiles"]
+        tree = ET.ElementTree(root)
+        tree.write(filename, encoding="ISO-8859-1",
                    xml_declaration=True, pretty_print=True)
 
     def write_xdmf(self, filename):
