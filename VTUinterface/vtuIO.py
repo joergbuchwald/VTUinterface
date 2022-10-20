@@ -1040,9 +1040,9 @@ class PVDIO:
                     resp_t[field].append(data)
         return resp_t
 
-    def clear_pvd_rel_path(self, write=True):
+    def clear_pvd_path(self, write=True):
         """
-        Delete relative directory paths in the vtu filenames of the PVD file.
+        Delete relative and absolute directory paths in the vtu filenames of the PVD file.
 
         Parameters
         ----------
