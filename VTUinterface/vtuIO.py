@@ -857,7 +857,7 @@ class PVDIO:
                     data = {}
                     vtkdata = vtu.get_data_vtk(pts, data_type=data_type, interpolation_method=interpolation_method)
                     for field in fieldname:
-                        data[field] = vtk_to_numpy(vtkdata.GetArray(fieldname))
+                        data[field] = vtk_to_numpy(vtkdata.GetArray(field))
                     for j, pt in enumerate(pts):
                         for field in fieldname:
                             resp_t[pt][field].append(data[field][j])
