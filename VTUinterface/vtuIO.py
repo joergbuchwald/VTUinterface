@@ -51,9 +51,11 @@ class VTUIO:
                  scipy or vtk
     """
     def __init__(self, filename, nneighbors=20, dim=3, one_d_axis=0, two_d_planenormal=2,
-                                                        interpolation_backend="vtk"):
-        print("WARNING: Default interpolation backend changed to VTK. This might result in")
-        print("slight changes of interpolated values if defaults are/were used.")
+                                                        interpolation_backend=None):
+        if interpolation_backend is None:
+            print("WARNING: Default interpolation backend changed to VTK. This might result in")
+            print("slight changes of interpolated values if defaults are/were used.")
+            interpolation_backend="vtk"
         self.filename = filename
         if filename.split(".")[-1] == "vtu":
             self.reader = vtk.vtkXMLUnstructuredGridReader()
@@ -242,8 +244,9 @@ class VTUIO:
         """
         Get interpolated data for points_interpol using vtks built-in interpolation methods
         """
-        kernels = {"voronoi": vtk.vtkVoronoiKernel(), "gaussian": vtk.vtkGaussianKernel(),
-        "shepard": vtk.vtkShepardKernel(), "linear": vtk.vtkLinearKernel()}
+        kernels = {"nearest": vtk.vtkVoronoiKernel(), "voronoi": vtk.vtkVoronoiKernel(), "gaussian": vtk.vtkGaussianKernel(),
+        "shepard": vtk.vtkShepardKernel()}
+        #           "linear": vtk.vtkLinearKernel()} temporarily deactivated
         pointnumpyarray = np.array([points_interpol[pt] for pt in points_interpol])
         out_u_grid = vtk.vtkUnstructuredGrid()
         r = vtk.vtkPoints()
@@ -687,7 +690,11 @@ class PVDIO:
                  scipy or vtk
     """
     def __init__(self, filename, nneighbors=20, dim=3, one_d_axis=0, two_d_planenormal=2,
-                                                            interpolation_backend="vtk"):
+                                                            interpolation_backend=None):
+        if interpolation_backend is None:
+            print("WARNING: Default interpolation backend changed to VTK. This might result in")
+            print("slight changes of interpolated values if defaults are/were used.")
+            interpolation_backend="vtk"
         if os.path.isfile(filename) is True:
             self.folder, self.filename = os.path.split(filename)
         else:
