@@ -1119,6 +1119,7 @@ class PVDIO:
         root = tree.getroot()
         find_xpath = root.findall(xpath)
         offset = 0
+        folder, filename_dirstripped = os.path.split(filename)
         if float(find_xpath[0].get("timestep")) < self.timesteps[-1]:
             offset = self.timesteps[-1]
         elif float(find_xpath[0].get("timestep")) == self.timesteps[-1]:
@@ -1128,10 +1129,11 @@ class PVDIO:
             self.timesteps = np.append(self.timesteps, [float(tag.attrib['timestep'])+offset])
             newvtuname = tag.attrib['file']
             if vtu_rename is True:
-                newvtuname = tag.attrib['file'].replace(filename.split(".pvd")[0],
+                newvtuname = tag.attrib['file'].replace(filename_dirstripped.split(".pvd")[0],
                                                    self.filename.split(".pvd")[0])
-                os.rename(os.path.join(self.folder, tag.attrib['file']), os.path.join(self.folder, newvtuname))
-            self.vtufilenames.append(newvtuname)
+                os.rename(os.path.join(self.folder, tag.attrib['file']), os.path.join(self.folder,
+                                                                     folder, newvtuname))
+            self.vtufilenames.append(os.path.join(self.folder, folder, newvtuname))
         root = ET.Element("VTKFile")
         root.attrib["type"] = "Collection"
         root.attrib["version"] = "0.1"
