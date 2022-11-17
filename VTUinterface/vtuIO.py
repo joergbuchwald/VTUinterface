@@ -445,7 +445,7 @@ class VTUIO:
         resp_array = np.array(resp_list)
         return resp_array
 
-    def func_to_field(self, function, fieldname, ofilename, cell=False, writefile=True):
+    def func_to_field(self, function, fieldname, ofilename=None, cell=False, writefile=True):
         """
         Add a field to the vtu file (which will be saved directly as "ofilename"
         by providing a three argument function(x,y,z)
@@ -457,6 +457,8 @@ class VTUIO:
         ofilename : `str`
         cell : `bool`
         """
+        if ofilename is None:
+            ofilename = self.filename
         if callable(function) is False:
             print("function is not a function")
             raise TypeError
@@ -485,7 +487,7 @@ class VTUIO:
             writer.SetInputData(self.output)
             writer.Write()
 
-    def func_to_m_dim_field(self, functionarray, fieldname, ofilename, cell=False, writefile=True):
+    def func_to_m_dim_field(self, functionarray, fieldname, ofilename=None, cell=False, writefile=True):
         """
         Add a multidimensional field to the vtu file (which will be saved directly as "ofilename"
         by providing am array of three argument functions.
@@ -496,6 +498,8 @@ class VTUIO:
         fieldname : `str`
         ofilename : `str`
         """
+        if ofilename is None:
+            ofilename = self.filename
         mdim = len(functionarray)
         for function in functionarray:
             if callable(function) is False:
@@ -536,7 +540,7 @@ class VTUIO:
             writer.SetInputData(self.output)
             writer.Write()
 
-    def point_data_to_cell_data(self, fieldname, ofilename, writefile=True):
+    def point_data_to_cell_data(self, fieldname, ofilename=None, writefile=True):
         """
         convert pointdata to cell data of field "fieldname"
 
@@ -545,6 +549,8 @@ class VTUIO:
         fieldname : `str`
         ofilename : `str`
         """
+        if ofilename is None:
+            ofilename = self.filename
         p2c = vtk.vtkPointDataToCellData()
         p2c.SetInputData(self.output)
         p2c.Update()
@@ -556,7 +562,7 @@ class VTUIO:
         if writefile is True:
             self.write(ofilename)
 
-    def delete_point_field(self, fieldnames, ofilename, writefile=True):
+    def delete_point_field(self, fieldnames, ofilename=None, writefile=True):
         """
         delete point field(s) and write data to disk
 
@@ -566,6 +572,8 @@ class VTUIO:
         ofilename : `str`
         writefile : `bool`
         """
+        if ofilename is None:
+            ofilename = self.filename
         if isinstance(fieldnames, str):
             self.pdata.RemoveArray(fieldnames)
         elif isinstance(fieldnames, list):
@@ -576,7 +584,7 @@ class VTUIO:
         if writefile is True:
             self.write(ofilename)
 
-    def delete_cell_field(self, fieldnames, ofilename, writefile=True):
+    def delete_cell_field(self, fieldnames, ofilename=None, writefile=True):
         """
         delete cell field(s) and write data to disk
 
@@ -586,6 +594,8 @@ class VTUIO:
         ofilename : `str`
         writefile : `bool`
         """
+        if ofilename is None:
+            ofilename = self.filename
         if isinstance(fieldnames, str):
             self.cdata.RemoveArray(fieldnames)
         elif isinstance(fieldnames, list):
@@ -596,7 +606,7 @@ class VTUIO:
         if writefile is True:
             self.write(ofilename)
 
-    def delete_integration_point_field(self, fieldnames, ofilename, writefile=True):
+    def delete_integration_point_field(self, fieldnames, ofilename=None, writefile=True):
         """
         delete integration point field(s) and write data to disk
 
@@ -606,6 +616,8 @@ class VTUIO:
         ofilename : `str`
         writefile : `bool`
         """
+        if ofilename is None:
+            ofilename = self.filename
         if isinstance(fieldnames, str):
             self.ipdata.RemoveArray(fieldnames)
         elif isinstance(fieldnames, list):
