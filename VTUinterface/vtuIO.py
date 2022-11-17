@@ -107,7 +107,7 @@ class VTUIO:
     def header(self):
         header_dict = {"N Cells": [str(len(self.cell_center_points))], "N Points": [str(len(self.points))],
                 "N Cell Arrays": [len(self.get_cell_field_names())],
-                "N Point Arrays": [len(self.get_point_field_names())],
+                       "N Point Arrays": [len(self.get_point_field_names())], "N Integration Point Arrays": [len(self.get_integration_point_field_names())],
                 "X Bounds": [str(np.min(self.points[:,0])) + ", " + str(np.max(self.points[:,0]))]}
         if self.dim > 1:
             header_dict["Y Bounds"] = [str(np.min(self.points[:,1]))+" "+str(np.max(self.points[:,1]))]
@@ -120,6 +120,7 @@ class VTUIO:
     def data_arrays(self):
         pf_names = self.get_point_field_names()
         cf_names = self.get_cell_field_names()
+        ip_names = self.get_integration_point_field_names()
         data_array_dict = {}
         for name in pf_names:
             field = self.get_point_field(name)
@@ -130,7 +131,18 @@ class VTUIO:
             data_array_dict[name] = ["point", components, np.min(field), np.mean(field), np.max(field)]
         for name in cf_names:
             field = self.get_cell_field(name)
+            if field.ndim == 1:
+                components = 1
+            else:
+                components = field.shape[1]
             data_array_dict[name] = ["cell", components, np.min(field), np.mean(field), np.max(field)]
+        for name in ip_names:
+            field = self.get_integration_point_field(name)
+            if field.ndim == 1:
+                components = 1
+            else:
+                components = field.shape[1]
+            data_array_dict[name] = ["ip data", components, np.min(field), np.mean(field), np.max(field)]
         df = pd.DataFrame(data_array_dict).T
         return df.rename({0:"type", 1: "components", 2: "Min", 3: "Mean", 4: "Max"}, axis='columns')
 
@@ -311,6 +323,17 @@ class VTUIO:
         fieldname : `str`
         """
         field = vtk_to_numpy(self.cdata.GetArray(fieldname))
+        return field
+
+    def get_integration_point_field(self, fieldname):
+        """
+        Return integration point field.
+
+        Parameters
+        ----------
+        fieldname : `str`
+        """
+        field = vtk_to_numpy(self.ipdata.GetArray(fieldname))
         return field
 
     def get_cell_field_as_point_data(self, fieldname):
