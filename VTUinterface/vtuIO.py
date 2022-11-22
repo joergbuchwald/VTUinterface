@@ -811,7 +811,7 @@ class PVDIO:
                     interpolation_backend=self.interpolation_backend)
             vtu.delete_cell_field(fieldnames, filename)
 
-    def delete_integration_point_field(self, fieldnames):
+    def delete_integration_point_field(self, fieldnames, skip_last=False):
         """
         delete integration point field(s) and write data to disk
 
@@ -819,13 +819,15 @@ class PVDIO:
         ----------
         fieldnames : `str` or `list`
         """
-        for filename in self.vtufilenames:
-            vtu = VTUIO(os.path.join(self.folder, filename),
+        nmax = len(self.vtufilenames)
+        for i, filename in enumerate(self.vtufilenames):
+            if ((i+skip_last) < nmax):
+                vtu = VTUIO(os.path.join(self.folder, filename),
                     nneighbors=self.nneighbors, dim=self.dim,
                     one_d_axis=self.one_d_axis,
                     two_d_planenormal=self.two_d_planenormal,
                     interpolation_backend=self.interpolation_backend)
-            vtu.delete_integration_point_field(fieldnames, os.path.join(self.folder,filename))
+                vtu.delete_integration_point_field(fieldnames, os.path.join(self.folder,filename))
 
     def read_pvd(self, filename):
         """
