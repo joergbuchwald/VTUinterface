@@ -585,16 +585,19 @@ class VTUIO:
         if writefile is True:
             self.write(ofilename)
 
-    def delete_point_field(self, fieldnames, ofilename=None, writefile=True):
+    def delete_point_field(self, fieldnames=None, ofilename=None, writefile=True):
         """
         delete point field(s) and write data to disk
 
         Parameters
         ----------
         fieldnames : `str` or `list`
+            if `None` all fields will be deleted
         ofilename : `str`
         writefile : `bool`
         """
+        if fieldnames is None:
+            fieldnames = self.get_point_field_names()
         if ofilename is None:
             ofilename = self.filename
         if isinstance(fieldnames, str):
@@ -607,16 +610,19 @@ class VTUIO:
         if writefile is True:
             self.write(ofilename)
 
-    def delete_cell_field(self, fieldnames, ofilename=None, writefile=True):
+    def delete_cell_field(self, fieldnames=None, ofilename=None, writefile=True):
         """
         delete cell field(s) and write data to disk
 
         Parameters
         ----------
         fieldnames : `str` or `list`
+                if `None` all fields will be deleted
         ofilename : `str`
         writefile : `bool`
         """
+        if fieldnames is None:
+            fieldnames = self.get_cell_field_names()
         if ofilename is None:
             ofilename = self.filename
         if isinstance(fieldnames, str):
@@ -629,16 +635,19 @@ class VTUIO:
         if writefile is True:
             self.write(ofilename)
 
-    def delete_integration_point_field(self, fieldnames, ofilename=None, writefile=True):
+    def delete_integration_point_field(self, fieldnames=None, ofilename=None, writefile=True):
         """
         delete integration point field(s) and write data to disk
 
         Parameters
         ----------
         fieldnames : `str` or `list`
+            if `None` all fields will be deleted
         ofilename : `str`
         writefile : `bool`
         """
+        if fieldnames is None:
+            fieldnames = self.get_integration_point_field_names()
         if ofilename is None:
             ofilename = self.filename
         if isinstance(fieldnames, str):
@@ -779,13 +788,14 @@ class PVDIO:
                     interpolation_backend=self.interpolation_backend)
         return vtu.get_integration_point_field_names()
 
-    def delete_point_field(self, fieldnames):
+    def delete_point_field(self, fieldnames=None):
         """
         delete point field(s) and write data to disk
 
         Parameters
         ----------
         fieldnames : `str` or `list`
+            if `None` all fields will be deleted
         """
         for filename in self.vtufilenames:
             vtu = VTUIO(os.path.join(self.folder, filename),
@@ -795,13 +805,14 @@ class PVDIO:
                     interpolation_backend=self.interpolation_backend)
             vtu.delete_point_field(fieldnames, filename)
 
-    def delete_cell_field(self, fieldnames):
+    def delete_cell_field(self, fieldnames=None):
         """
         delete cell field(s) and write data to disk
 
         Parameters
         ----------
         fieldnames : `str` or `list`
+            if `None` all fields will be deleted
         """
         for filename in self.vtufilenames:
             vtu = VTUIO(os.path.join(self.folder, filename),
@@ -811,13 +822,15 @@ class PVDIO:
                     interpolation_backend=self.interpolation_backend)
             vtu.delete_cell_field(fieldnames, filename)
 
-    def delete_integration_point_field(self, fieldnames, skip_last=False):
+    def delete_integration_point_field(self, fieldnames=None, skip_last=False):
         """
         delete integration point field(s) and write data to disk
 
         Parameters
         ----------
         fieldnames : `str` or `list`
+                if `None` all fields will be deleted
+        skip_last : `boolean`
         """
         nmax = len(self.vtufilenames)
         for i, filename in enumerate(self.vtufilenames):
