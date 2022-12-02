@@ -14,6 +14,7 @@ Copyright (c) 2012-2022, OpenGeoSys Community (http://www.opengeosys.org)
 
 # pylint: disable=C0103, R0902, R0914, R0913
 import os
+import sys
 import warnings
 
 import numpy as np
@@ -1121,7 +1122,11 @@ class PVDIO:
         #update file list:
         newlist = []
         for entry in  self.vtufilenames:
-            newlist.append(entry.split("/")[-1])
+            if sys.platform == "win32":
+                newlist.append(entry.split("\\")[-1])
+            else:
+                # TODO: Check function on other operating systems
+                newlist.append(entry.split("/")[-1])
         self.vtufilenames = newlist
 
     def rename(self, newname):
