@@ -851,8 +851,7 @@ class PVDIO:
         ----------
         filename : `str`
         """
-        self.filename = filename
-        tree = ET.parse(self.filename)
+        tree = ET.parse(filename)
         root = tree.getroot()
         for collection in root.getchildren():
             for dataset in collection.getchildren():
@@ -1107,7 +1106,7 @@ class PVDIO:
         write : `bool`
         """
         xpath="./Collection/DataSet"
-        tree = ET.parse(self.filename)
+        tree = ET.parse(os.path.join(self.folder, self.filename))
         root = tree.getroot()
         find_xpath = root.findall(xpath)
         for tag in find_xpath:
@@ -1115,7 +1114,7 @@ class PVDIO:
             filename_new = filename.split("/")[-1]
             tag.set("file", filename_new)
         if write is True:
-            tree.write(self.filename,
+            tree.write(os.path.join(self.folder, self.filename),
                             encoding="ISO-8859-1",
                             xml_declaration=True,
                             pretty_print=True)
@@ -1137,7 +1136,7 @@ class PVDIO:
         ----------
         newname : `str`
         """
-        tree = ET.parse(self.filename)
+        tree = ET.parse(os.path.join(self.folder, self.filename))
         if not ".pvd" in newname:
             newname = newname + ".pvd"
         os.rename(os.path.join(self.folder, self.filename), os.path.join(self.folder, newname))
@@ -1155,7 +1154,7 @@ class PVDIO:
             filename_new = filename.replace(self.filename.split(".pvd")[0], newname)
             tag.set("file", filename_new)
         self.filename = f"{newname}.pvd"
-        tree.write(self.filename,
+        tree.write(os.path.join(self.folder, self.filename),
                             encoding="ISO-8859-1",
                             xml_declaration=True,
                             pretty_print=True)
