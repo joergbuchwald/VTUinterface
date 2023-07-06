@@ -698,6 +698,24 @@ class VTUIO:
         if writefile is True:
             self.write(ofilename)
 
+    def add_integration_point_field(self, field, fieldname, ofilename, writefile=True):
+        """
+        Write a field (numpy array of correct size)
+        to field "fieldname" as file "ofilename".
+
+        Parameters
+        ----------
+        field : `array`
+        fieldname : `str`
+        ofilename : `str`
+        writefile : `bool`
+        """
+        field_vtk = numpy_to_vtk(field)
+        r = self.ipdata.AddArray(field_vtk)
+        self.ipdata.GetArray(r).SetName(fieldname)
+        if writefile is True:
+            self.write(ofilename)
+
     def write(self, filename, datamode="appended"):
         """
         Write data as file "filename".
