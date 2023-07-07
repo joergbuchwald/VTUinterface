@@ -95,6 +95,7 @@ class VTUIO:
         self.vtk_gaussian_footprint_to_n_closest = False
         self.vtk_shepard_power_parameter = 2.0
         self.vtk_shepard_radius = 0.5
+        self.datamode = "appended"
 
 
     def _proj(self, array):
@@ -716,7 +717,7 @@ class VTUIO:
         if writefile is True:
             self.write(ofilename)
 
-    def write(self, filename, datamode="appended"):
+    def write(self, filename, datamode=None):
         """
         Write data as file "filename".
 
@@ -728,9 +729,11 @@ class VTUIO:
         writer = vtk.vtkXMLUnstructuredGridWriter()
         writer.SetFileName(filename)
         writer.SetInputData(self.output)
-        if datamode == "binary":
+        if not datamode is None:
+            self.datamode = datamode
+        if self.datamode == "binary":
             writer.SetDataModeToBinary()
-        elif datamode == "ascii":
+        elif self.datamode == "ascii":
             writer.SetDataModeToAscii()
         writer.Write()
 
