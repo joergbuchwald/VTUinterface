@@ -53,10 +53,6 @@ class VTUIO:
     """
     def __init__(self, filename, nneighbors=20, dim=3, one_d_axis=0, two_d_planenormal=2,
                                                         interpolation_backend=None):
-        if interpolation_backend is None:
-            print("WARNING: Default interpolation backend changed to VTK. This might result in")
-            print("slight changes of interpolated values if defaults are/were used.")
-            interpolation_backend="vtk"
         self.filename = filename
         if filename.split(".")[-1] == "vtu":
             self.reader = vtk.vtkXMLUnstructuredGridReader()
@@ -89,7 +85,10 @@ class VTUIO:
         self._plane = [0, 1, 2]
         self._plane.pop(self.two_d_planenormal)
         # interpolation settings
-        self.interpolation_backend = interpolation_backend
+        if interpolation_backend is None:
+            self.interpolation_backend = "vtk"
+        else:
+            self.interpolation_backend = interpolation_backend
         self.vtk_gaussian_sharpness = 4.0
         self.vtk_gaussian_radius = 0.5
         self.vtk_gaussian_footprint_to_n_closest = False
@@ -762,9 +761,9 @@ class PVDIO:
     def __init__(self, filename, nneighbors=20, dim=3, one_d_axis=0, two_d_planenormal=2,
                                                             interpolation_backend=None):
         if interpolation_backend is None:
-            print("WARNING: Default interpolation backend changed to VTK. This might result in")
-            print("slight changes of interpolated values if defaults are/were used.")
-            interpolation_backend="vtk"
+            self.interpolation_backend = "vtk"
+        else:
+            self.interpolation_backend = interpolation_backend
         if os.path.isfile(filename) is True:
             self.folder, self.filename = os.path.split(filename)
         else:
@@ -776,7 +775,6 @@ class PVDIO:
         self.dim = dim
         self.one_d_axis = one_d_axis
         self.two_d_planenormal = two_d_planenormal
-        self.interpolation_backend = interpolation_backend
 
     def get_cell_field_names(self):
         """
