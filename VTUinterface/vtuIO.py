@@ -383,7 +383,7 @@ class VTUIO:
                 fieldnames.append(name)
         return fieldnames
 
-    def get_data(self, fieldname, pts = None, data_type="point", interpolation_method="probefilter"):
+    def get_data(self, fieldname, pts = None, data_type="point", interpolation_method=None):
         """
         Get data of field "fieldname" at all points specified in "pts".
 
@@ -407,6 +407,8 @@ class VTUIO:
                     resp[pt][field] = []
         # TODO: move following part into separate method (similar code in PVDIO)
         if self.interpolation_backend == "scipy":
+            if interpolation_method is None:
+                interpolation_method="linear"
             nb = self.get_neighbors(pts, data_type=data_type)
             if isinstance(fieldname, str):
                 data = self.get_data_scipy(nb, pts, fieldname, data_type=data_type,
@@ -422,6 +424,8 @@ class VTUIO:
                     for field in fieldname:
                         resp[pt][field] = data[field][pt]
         elif self.interpolation_backend == "vtk":
+            if interpolation_method is None:
+                interpolation_method="probefilter"
             if isinstance(fieldname, str):
                 resp_array = vtk_to_numpy(self.get_data_vtk(
                         pts, data_type=data_type, interpolation_method=interpolation_method).GetArray(fieldname))
@@ -441,7 +445,7 @@ class VTUIO:
         return resp
 
 
-    def get_set_data(self, fieldname, pointsetarray=None, data_type="point", interpolation_method="probefilter"):
+    def get_set_data(self, fieldname, pointsetarray=None, data_type="point", interpolation_method=None):
         """
         Get data specified in fieldname at all points specified in "pointsetarray".
 
@@ -879,7 +883,7 @@ class PVDIO:
                 self.timesteps = np.append(self.timesteps, [float(dataset.attrib['timestep'])])
                 self.vtufilenames.append(dataset.attrib['file'])
 
-    def read_time_series(self, fieldname, pts=None, data_type="point", interpolation_method="probefilter"):
+    def read_time_series(self, fieldname, pts=None, data_type="point", interpolation_method=None):
         """
         Return time series data of field "fieldname" at points pts.
         Also a list of fieldnames can be provided as "fieldname"
@@ -910,6 +914,8 @@ class PVDIO:
                     two_d_planenormal=self.two_d_planenormal,
                     interpolation_backend=self.interpolation_backend)
             if self.interpolation_backend == "scipy":
+                if interpolation_method is None:
+                    interpolation_method = "linear"
                 if i == 0:
                     nb = vtu.get_neighbors(pts, data_type=data_type)
                 if isinstance(fieldname, str):
@@ -926,6 +932,8 @@ class PVDIO:
                         for field in fieldname:
                             resp_t[pt][field].append(data[field][pt])
             elif self.interpolation_backend == "vtk":
+                if interpolation_method is None:
+                      interpolation_method = "probefilter"
                 if isinstance(fieldname, str):
                     data = vtk_to_numpy(
                         vtu.get_data_vtk(pts, data_type=data_type, interpolation_method=interpolation_method).GetArray(fieldname))
@@ -1002,7 +1010,7 @@ class PVDIO:
                 field = field1 + fieldslope * (time-time1)
         return field
 
-    def read_set_data(self, time, fieldname, pointsetarray = None, data_type="point", interpolation_method="probefilter"):
+    def read_set_data(self, time, fieldname, pointsetarray = None, data_type="point", interpolation_method=None):
         """
         Get data of field "fieldname" at time "time" alon a given "pointsetarray".
 
