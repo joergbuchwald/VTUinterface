@@ -771,6 +771,7 @@ class PVDIO:
         self.nneighbors = nneighbors
         self.timesteps = np.array([])
         self.vtufilenames = []
+        self.tree = None
         self.read_pvd(os.path.join(self.folder, self.filename))
         self.dim = dim
         self.one_d_axis = one_d_axis
@@ -874,8 +875,8 @@ class PVDIO:
         ----------
         filename : `str`
         """
-        tree = ET.parse(filename)
-        root = tree.getroot()
+        self.tree = ET.parse(filename)
+        root = self.tree.getroot()
         for collection in root.getchildren():
             for dataset in collection.getchildren():
                 self.timesteps = np.append(self.timesteps, [float(dataset.attrib['timestep'])])
@@ -1275,6 +1276,26 @@ class PVDIO:
         tree = ET.ElementTree(root)
         tree.write(filename, encoding="ISO-8859-1",
                    xml_declaration=True, pretty_print=True)
+
+    def write_prj(self, filename):
+        """
+        exports input data (if available)
+        as OGS project files
+
+        Parameters
+        ----------
+        filename : `str`
+        """
+        comments = self.tree.xpath("./comment()")
+        prjstring = "<OpenGeoSysProject>"
+        prjstring += str(comments[0]).split("<OpenGeoSysProject>")[1].split("</OpenGeoSysProject>")[0]
+        prjstring += "</OpenGeoSysProject>"
+        prjstring = prjstring.replace("\\n","")
+        parser = ET.XMLParser(remove_blank_text=True, remove_comments=True)
+        root = ET.fromstring(prjstring, parser)
+        prjtree = ET.ElementTree(root)
+        ET.indent(prjtree, space="    ")
+        prjtree.write(filename, encoding="ISO-8859-1", xml_declaration=True, pretty_print=True)
 
     def write_xdmf(self, filename):
         """
