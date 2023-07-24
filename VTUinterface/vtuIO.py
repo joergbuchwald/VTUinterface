@@ -1038,6 +1038,7 @@ class PVDIO:
                     two_d_planenormal=self.two_d_planenormal,
                     interpolation_backend=self.interpolation_backend)
             field = vtu.get_set_data(fieldname, pointsetarray, data_type=data_type, interpolation_method=interpolation_method)
+            return field
         else:
             filename1 = None
             filename2 = None
@@ -1069,7 +1070,7 @@ class PVDIO:
                 field2 = vtu2.get_set_data(fieldname, pointsetarray, data_type=data_type, interpolation_method=interpolation_method)
                 fieldslope = (field2-field1)/(time2-time1)
                 field = field1 + fieldslope * (time-time1)
-        return field
+                return field
 
     def read_aggregate(self, fieldname, agg_fct, data_type="point", pointsetarray=None):
         """
