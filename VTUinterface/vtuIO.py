@@ -473,7 +473,7 @@ class VTUIO:
         resp_array = np.array(resp_list)
         return resp_array
 
-    def func_to_field(self, function, fieldname, ofilename=None, cell=False, writefile=True):
+    def func_to_field(self, function, fieldname, ofilename=None, cell=False, array_type=None, writefile=True, datamode=None):
         """
         Add a field to the vtu file (which will be saved directly as "ofilename"
         by providing a three argument function(x,y,z)
@@ -484,6 +484,7 @@ class VTUIO:
         fieldname : `str`
         ofilename : `str`
         cell : `bool`
+        datamode : `str`
         """
         if ofilename is None:
             ofilename = self.filename
@@ -502,7 +503,7 @@ class VTUIO:
                 fieldarray[i] = function(points[i,0], points[i,1], 0.0)
             else:
                 fieldarray[i] = function(points[i,0], points[i,1], points[i,2])
-        field_vtk = numpy_to_vtk(fieldarray)
+        field_vtk = numpy_to_vtk(fieldarray, array_type=None)
         if cell is True:
             r = self.cdata.AddArray(field_vtk)
             self.cdata.GetArray(r).SetName(fieldname)
@@ -510,12 +511,9 @@ class VTUIO:
             r = self.pdata.AddArray(field_vtk)
             self.pdata.GetArray(r).SetName(fieldname)
         if writefile is True:
-            writer = vtk.vtkXMLUnstructuredGridWriter()
-            writer.SetFileName(ofilename)
-            writer.SetInputData(self.output)
-            writer.Write()
+            self.write(ofilename, datamode=datamode)
 
-    def func_to_m_dim_field(self, functionarray, fieldname, ofilename=None, cell=False, writefile=True):
+    def func_to_m_dim_field(self, functionarray, fieldname, ofilename=None, cell=False, array_type=None, writefile=True, datamode=None):
         """
         Add a multidimensional field to the vtu file (which will be saved directly as "ofilename"
         by providing am array of three argument functions.
@@ -555,7 +553,7 @@ class VTUIO:
                         points[i,0],
                         points[i,1],
                         points[i,2])
-        field_vtk = numpy_to_vtk(fieldarray)
+        field_vtk = numpy_to_vtk(fieldarray, array_type=array_type)
         if cell is True:
             r = self.cdata.AddArray(field_vtk)
             self.cdata.GetArray(r).SetName(fieldname)
@@ -563,12 +561,9 @@ class VTUIO:
             r = self.pdata.AddArray(field_vtk)
             self.pdata.GetArray(r).SetName(fieldname)
         if writefile is True:
-            writer = vtk.vtkXMLUnstructuredGridWriter()
-            writer.SetFileName(ofilename)
-            writer.SetInputData(self.output)
-            writer.Write()
+            self.write(ofilename, datamode=datamode)
 
-    def point_data_to_cell_data(self, fieldname, ofilename=None, writefile=True):
+    def point_data_to_cell_data(self, fieldname, ofilename=None, writefile=True, datamode=None):
         """
         convert pointdata to cell data of field "fieldname"
 
@@ -576,6 +571,7 @@ class VTUIO:
         ----------
         fieldname : `str`
         ofilename : `str`
+        datamode : `str`
         """
         if ofilename is None:
             ofilename = self.filename
@@ -588,7 +584,7 @@ class VTUIO:
         cells_orig = self.output.GetCellData()
         cells_orig.AddArray(array)
         if writefile is True:
-            self.write(ofilename)
+            self.write(ofilename, datamode=datamode)
 
     def delete_point_field(self, fieldnames=None, ofilename=None, writefile=True):
         """
@@ -613,7 +609,7 @@ class VTUIO:
         else:
             raise TypeError("Fieldnames has the wrong type. Please provide a list or string.")
         if writefile is True:
-            self.write(ofilename)
+            self.write(ofilename, datamode=datamode)
 
     def delete_cell_field(self, fieldnames=None, ofilename=None, writefile=True):
         """
@@ -638,7 +634,7 @@ class VTUIO:
         else:
             raise TypeError("Fieldnames has the wrong type. Please provide a list or string.")
         if writefile is True:
-            self.write(ofilename)
+            self.write(ofilename, datamode=datamode)
 
     def delete_integration_point_field(self, fieldnames=None, ofilename=None, writefile=True):
         """
@@ -663,10 +659,10 @@ class VTUIO:
         else:
             raise TypeError("Fieldnames has the wrong type. Please provide a list or string.")
         if writefile is True:
-            self.write(ofilename)
+            self.write(ofilename, datamode=datamode)
 
 
-    def add_point_field(self, field, fieldname, ofilename, writefile=True):
+    def add_point_field(self, field, fieldname, ofilename, writefile=True, array_type=None, datamode=None):
         """
         Write a field (numpy array of correct size)
         to field "fieldname" as file "ofilename".
@@ -677,14 +673,16 @@ class VTUIO:
         fieldname : `str`
         ofilename : `str`
         writefile : `bool`
+        array_type : `vtk array type`
+        datamode : `str`
         """
-        field_vtk = numpy_to_vtk(field)
+        field_vtk = numpy_to_vtk(field, array_type=array_type)
         r = self.pdata.AddArray(field_vtk)
         self.pdata.GetArray(r).SetName(fieldname)
         if writefile is True:
-            self.write(ofilename)
+            self.write(ofilename, datamode=datamode)
 
-    def add_cell_field(self, field, fieldname, ofilename, writefile=True):
+    def add_cell_field(self, field, fieldname, ofilename, writefile=True, array_type=None, datamode=None):
         """
         Write a field (numpy array of correct size)
         to field "fieldname" as file "ofilename".
@@ -695,14 +693,16 @@ class VTUIO:
         fieldname : `str`
         ofilename : `str`
         writefile : `bool`
+        array_type : `vtk array type`
+        datamode : `str`
         """
         field_vtk = numpy_to_vtk(field)
         r = self.cdata.AddArray(field_vtk)
         self.cdata.GetArray(r).SetName(fieldname)
         if writefile is True:
-            self.write(ofilename)
+            self.write(ofilename, datamode=datamode)
 
-    def add_integration_point_field(self, field, fieldname, ofilename, writefile=True):
+    def add_integration_point_field(self, field, fieldname, ofilename, writefile=True, array_type=None, datamode=None):
         """
         Write a field (numpy array of correct size)
         to field "fieldname" as file "ofilename".
@@ -713,12 +713,14 @@ class VTUIO:
         fieldname : `str`
         ofilename : `str`
         writefile : `bool`
+        array_type : `vtk array type`
+        datamode : `str`
         """
         field_vtk = numpy_to_vtk(field)
         r = self.ipdata.AddArray(field_vtk)
         self.ipdata.GetArray(r).SetName(fieldname)
         if writefile is True:
-            self.write(ofilename)
+            self.write(ofilename, datamode=datamode)
 
     def write(self, filename, datamode=None):
         """
