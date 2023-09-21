@@ -592,7 +592,7 @@ class VTUIO:
         if writefile is True:
             self.write(ofilename, datamode=datamode)
 
-    def delete_point_field(self, fieldnames=None, ofilename=None, writefile=True):
+    def delete_point_field(self, fieldnames=None, ofilename=None, writefile=True, datamode=None):
         """
         delete point field(s) and write data to disk
 
@@ -602,6 +602,7 @@ class VTUIO:
             if `None` all fields will be deleted
         ofilename : `str`
         writefile : `bool`
+        datamode : `str`
         """
         if fieldnames is None:
             fieldnames = self.get_point_field_names()
@@ -617,7 +618,7 @@ class VTUIO:
         if writefile is True:
             self.write(ofilename, datamode=datamode)
 
-    def delete_cell_field(self, fieldnames=None, ofilename=None, writefile=True):
+    def delete_cell_field(self, fieldnames=None, ofilename=None, writefile=True, datamode=None):
         """
         delete cell field(s) and write data to disk
 
@@ -627,6 +628,7 @@ class VTUIO:
                 if `None` all fields will be deleted
         ofilename : `str`
         writefile : `bool`
+        datamode : `str`
         """
         if fieldnames is None:
             fieldnames = self.get_cell_field_names()
@@ -642,7 +644,7 @@ class VTUIO:
         if writefile is True:
             self.write(ofilename, datamode=datamode)
 
-    def delete_integration_point_field(self, fieldnames=None, ofilename=None, writefile=True):
+    def delete_integration_point_field(self, fieldnames=None, ofilename=None, writefile=True, datamode=None):
         """
         delete integration point field(s) and write data to disk
 
@@ -652,6 +654,7 @@ class VTUIO:
             if `None` all fields will be deleted
         ofilename : `str`
         writefile : `bool`
+        datamode : `str`
         """
         if fieldnames is None:
             fieldnames = self.get_integration_point_field_names()
