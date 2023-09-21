@@ -484,6 +484,8 @@ class VTUIO:
         fieldname : `str`
         ofilename : `str`
         cell : `bool`
+        array_type : `vtk array type`
+        writefile : `bool`
         datamode : `str`
         """
         if ofilename is None:
@@ -503,7 +505,7 @@ class VTUIO:
                 fieldarray[i] = function(points[i,0], points[i,1], 0.0)
             else:
                 fieldarray[i] = function(points[i,0], points[i,1], points[i,2])
-        field_vtk = numpy_to_vtk(fieldarray, array_type=None)
+        field_vtk = numpy_to_vtk(fieldarray, array_type=array_type)
         if cell is True:
             r = self.cdata.AddArray(field_vtk)
             self.cdata.GetArray(r).SetName(fieldname)
@@ -523,6 +525,10 @@ class VTUIO:
         functionarray : `array` of objects
         fieldname : `str`
         ofilename : `str`
+        cell : `bool`
+        array_type : `vtk array type`
+        writefile : `bool`
+        data_mode : `str`
         """
         if ofilename is None:
             ofilename = self.filename
