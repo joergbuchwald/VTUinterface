@@ -1228,6 +1228,7 @@ class PVDIO:
                 os.rename(os.path.join(self.folder, tag.attrib['file']), os.path.join(self.folder,
                                                                      folder, newvtuname))
             self.vtufilenames.append(os.path.join(self.folder, folder, newvtuname))
+        #pvdwriter
         root = ET.Element("VTKFile")
         root.attrib["type"] = "Collection"
         root.attrib["version"] = "0.1"
@@ -1235,7 +1236,49 @@ class PVDIO:
         root.attrib["compressor"] = "vtkZLibDataCompressor"
         collection = ET.SubElement(root,"Collection")
         timestepselements = []
+        for i, timestep in enumerate(self.timesteps):
+            timestepselements.append(ET.SubElement(collection, "DataSet"))
+            timestepselements[-1].attrib["timestep"] = str(timestep)
+            timestepselements[-1].attrib["group"] = ""
+            timestepselements[-1].attrib["part"] = "0"
+            timestepselements[-1].attrib["file"] = self.vtufilenames[i]
+        tree = ET.ElementTree(root)
+        tree.write(os.path.join(self.folder, self.filename), encoding="ISO-8859-1",
+                   xml_declaration=True, pretty_print=True)
+
+    def delete_small_timesteps(self, minimum_ts_size):
+        """
+        appends entries from another PVD file
+
+        Parameters
+        ----------
+        minimum_ts_size : `float`
+            time stepps smaller than this size will be deleted
+        """
+        tobedeleted = []
+        for i, timestep in enumerate(self.timesteps):
+            if i > 0:
+                j = i-1
+                while j in tobedeleted:
+                    j = j - 1
+                delta = timestep - self.timesteps[j]
+                if delta < minimum_ts_size:
+                    try:
+                        os.remove(self.vtufilenames[i])
+                    except FileNotFoundError:
+                        print("File not found, but will be removed from PVD")
+                    tobedeleted.append(i)
+        self.timesteps = np.delete(self.timesteps, tobedeleted)
+        for entry in sorted(tobedeleted, reverse = True):
+            del self.vtufilenames[entry]
         #pvdwriter
+        root = ET.Element("VTKFile")
+        root.attrib["type"] = "Collection"
+        root.attrib["version"] = "0.1"
+        root.attrib["byte_order"] = "LittleEndian"
+        root.attrib["compressor"] = "vtkZLibDataCompressor"
+        collection = ET.SubElement(root,"Collection")
+        timestepselements = []
         for i, timestep in enumerate(self.timesteps):
             timestepselements.append(ET.SubElement(collection, "DataSet"))
             timestepselements[-1].attrib["timestep"] = str(timestep)
