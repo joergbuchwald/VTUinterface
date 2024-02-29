@@ -1199,7 +1199,7 @@ class PVDIO:
                             xml_declaration=True,
                             pretty_print=True)
 
-    def append(self, filename, vtu_rename=False):
+    def append(self, filename, vtu_rename=False, timestep_from_filename=False):
         """
         appends entries from another PVD file
 
@@ -1220,7 +1220,13 @@ class PVDIO:
             self.timesteps = self.timesteps[:-1]
             self.vtufilenames = self.vtufilenames[:-1]
         for tag in find_xpath:
-            self.timesteps = np.append(self.timesteps, [float(tag.attrib['timestep'])+offset])
+            if timestep_from_filename is False:
+                self.timesteps = np.append(self.timesteps, [float(tag.attrib['timestep'])+offset])
+            else:
+                fn = tag.attrib['file']
+                fn_cut = fn.split("_t_")[1]
+                time_fromfile = float(fn_cut(".")[0]+"."+fn_cut(".")[1])
+                self.timesteps = np.append(self.timesteps, [time_fromfile])
             newvtuname = tag.attrib['file']
             if vtu_rename is True:
                 newvtuname = tag.attrib['file'].replace(filename_dirstripped.split(".pvd")[0],
