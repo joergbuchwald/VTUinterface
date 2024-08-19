@@ -731,6 +731,53 @@ class VTUIO:
         if writefile is True:
             self.write(ofilename, datamode=datamode)
 
+    def generate_line_elements_from_ids(self, list_of_tuples, filename, datamode=None):
+        """
+        Generates a file containing line elements
+        from point ids.
+
+        Parameters
+        ----------
+        list_of_tuples : `list`
+        filename : `str`
+        datamode : `str`
+        """
+        points = vtk.vtkPoints()
+        pointids = []
+        lines = []
+        cells = []
+        for entry in list_of_tuples:
+            pt0 = entry[0]
+            pt1 = entry[1]
+            for pt in (pt0, pt1):
+                if not pt in pointids:
+                    points.InsertNextPoint(self.points[pt][0], self.points[pt][1], self.points[pt][2])
+                    pointids.append(pt)
+            lines.append(vtk.vtkLine())
+            lines[-1].GetPointIds().SetId(0, pointids.index(pt0))
+            lines[-1].GetPointIds().SetId(1, pointids.index(pt1))
+            cells.append(vtk.vtkCellArray())
+            cells[-1].InsertNextCell(lines[-1])
+        unstructuredGrid = vtk.vtkUnstructuredGrid()
+        unstructuredGrid.SetPoints(points)
+        for line in lines:
+             unstructuredGrid.InsertNextCell(line.GetCellType(), line.GetPointIds())
+        field_vtk = numpy_to_vtk(pointids, array_type=vtk.VTK_UNSIGNED_LONG)
+        pdata = unstructuredGrid.GetPointData()
+        r = pdata.AddArray(field_vtk)
+        pdata.GetArray(r).SetName("bulk_node_ids")
+
+        writer = vtk.vtkXMLUnstructuredGridWriter()
+        writer.SetFileName(filename)
+        writer.SetInputData(unstructuredGrid)
+        if datamode == "binary":
+            writer.SetDataModeToBinary()
+        elif datamode == "ascii":
+            writer.SetDataModeToAscii()
+        writer.Write()
+
+
+
     def write(self, filename, datamode=None):
         """
         Write data as file "filename".
