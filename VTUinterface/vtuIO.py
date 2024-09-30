@@ -705,7 +705,7 @@ class VTUIO:
         array_type : `vtk array type`
         datamode : `str`
         """
-        field_vtk = numpy_to_vtk(field)
+        field_vtk = numpy_to_vtk(field, array_type=array_type)
         r = self.cdata.AddArray(field_vtk)
         self.cdata.GetArray(r).SetName(fieldname)
         if writefile is True:
