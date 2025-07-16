@@ -799,6 +799,64 @@ class VTUIO:
         writer.Write()
 
 
+    def find_intersections_with_line(self, p0, p1):
+        """
+        Find cells in unstructured_grid intersected by a line segment from p0 to p1.
+
+        Args:
+            unstructured_grid (vtk.vtkUnstructuredGrid): The input mesh.
+            p0 (tuple): Start point of the line (x, y, z).
+            p1 (tuple): End point of the line (x, y, z).
+
+        Returns:
+            List of tuples: (cell_id, [intersection_points])
+        """
+        intersection_results = []
+
+        num_cells = self.output.GetNumberOfCells()
+
+        for cell_id in range(num_cells):
+            cell =  self.output.GetCell(cell_id)
+            points = cell.GetPoints()
+
+            # Prepare storage for intersection data
+            tol = 1e-6
+            t = vtk.mutable(0.0)
+            x = [0.0, 0.0, 0.0]
+            pcoords = [0.0, 0.0, 0.0]
+            sub_id = vtk.mutable(0)
+
+            # Check if the line intersects the cell
+            intersects = cell.IntersectWithLine(p0, p1, tol, t, x, pcoords, sub_id)
+
+            if intersects:
+                intersection_results.append((cell_id, list(x), t.get()))
+
+        # Sort by t-value (from p0 to p1)
+        intersection_results.sort(key=lambda item: item[2])
+
+        return intersection_results
+
+
+# Example usage:
+if __name__ == "__main__":
+    # Load or generate a vtkUnstructuredGrid
+    reader = vtk.vtkUnstructuredGridReader()
+    reader.SetFileName("your_unstructured_grid.vtk")
+    reader.Update()
+    grid = reader.GetOutput()
+
+    # Define the line start and end points
+    p0 = (0.0, 0.0, 0.0)
+    p1 = (1.0, 1.0, 1.0)
+
+    results = find_intersections_with_line(grid, p0, p1)
+
+    for cell_id, intersection_point in results:
+        print(f"Cell {cell_id} is intersected at point {intersection_point}")
+
+
+
 
 class PVDIO:
     """
